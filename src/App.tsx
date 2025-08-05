@@ -1,0 +1,1666 @@
+import React, { useState, useEffect } from 'react';
+
+// Type definitions
+interface Package {
+  id: string;
+  customer: string;
+  recipient?: string;
+  description?: string;
+  status: string;
+  rider: string;
+  customerRetrievalOTP: string | null;
+  riderLockerAccessCode: string | null;
+  paid: boolean;
+  targetLockerId: string | null;
+  lockerId: string | null;
+}
+
+interface Locker {
+  id: string;
+  location: string;
+  status: string;
+}
+
+interface Rider {
+  id: string;
+  name: string;
+}
+
+interface MessageBoxProps {
+  message: string;
+  type: 'success' | 'error' | 'info';
+  onClose: () => void;
+}
+
+interface PaymentModalProps {
+  packageId: string;
+  serviceFee: number;
+  onConfirmPayment: (packageId: string) => void;
+  onClose: () => void;
+}
+
+interface OTPDisplayModalProps {
+  packageId: string;
+  otp: string;
+  onClose: () => void;
+}
+
+interface PackageReceiptConfirmationModalProps {
+  package: Package;
+  onConfirmReceipt: () => void;
+  onClose: () => void;
+}
+
+interface AuthScreenProps {
+  onLoginSuccess: (role: string) => void;
+}
+
+interface CustomerDashboardProps {
+  packages: Package[];
+  onUpdatePackage: (packages: Package[]) => void;
+  userId: string;
+  serviceFee: number;
+  lockers: Locker[];
+  riders: Rider[];
+  onUpdateLocker: (lockers: Locker[]) => void;
+}
+
+interface RiderDashboardProps {
+  packages: Package[];
+  onUpdatePackage: (packages: Package[]) => void;
+  lockers: Locker[];
+  userId: string;
+  serviceFee: number;
+  commissionRate: number;
+  riders: Rider[];
+}
+
+interface AdminDashboardProps {
+  packages: Package[];
+  lockers: Locker[];
+  onUpdateLocker: (lockers: Locker[]) => void;
+  userId: string;
+}
+
+// Tailwind CSS is assumed to be available in the environment.
+
+// Utility function to generate a random OTP
+const generateOTP = () => {
+  return Math.floor(100000 + Math.random() * 900000).toString(); // 6-digit OTP
+};
+
+// --- Shared Components ---
+
+// Loading spinner component
+const LoadingSpinner = () => (
+  <div className="flex justify-center items-center py-4">
+    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
+    <p className="ml-3 text-white">กำลังโหลด...</p>
+  </div>
+);
+
+// Message box for user feedback
+const MessageBox: React.FC<MessageBoxProps> = ({ message, type, onClose }) => {
+  if (!message) return null;
+
+  const bgColor = type === 'success' ? 'bg-green-500' : (type === 'info' ? 'bg-blue-500' : 'bg-red-500');
+  const textColor = 'text-white';
+
+  return (
+    <div className={`${bgColor} ${textColor} p-3 md:p-4 rounded-lg shadow-lg mb-4 flex justify-between items-center text-sm md:text-base`}>
+      <p>{message}</p>
+      <button onClick={onClose} className="text-white font-bold text-xl leading-none ml-2">
+        &times;
+      </button>
+    </div>
+  );
+};
+
+// Payment Modal Component
+const PaymentModal: React.FC<PaymentModalProps> = ({ packageId, serviceFee, onConfirmPayment, onClose }) => {
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
+
+  const handleConfirm = () => {
+    setLoading(true);
+    setMessage('');
+    setTimeout(() => {
+      setLoading(false);
+      setMessageType('success');
+      setMessage('ชำระเงินสำเร็จแล้ว! ไรเดอร์จะมารับพัสดุของคุณ');
+      onConfirmPayment(packageId);
+      // Automatically close after a short delay for better UX
+      setTimeout(onClose, 2000);
+    }, 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-gray-900 bg-opacity-75 flex items-center justify-center p-4 z-50">
+      <div className="bg-white p-6 md:p-8 rounded-xl shadow-2xl w-full max-w-sm md:max-w-md">
+        <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-4 md:mb-6 text-center">ชำระค่าบริการ EcoDeliver</h3>
+        <div className="text-center mb-4">
+          <p className="text-sm text-gray-600">พัสดุ #{packageId}</p>
+          <p className="text-xs text-green-600 mt-1">💳 ชำระเงินเพื่อยืนยันการจอง</p>
+        </div>
+        <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
+        <div className="text-center mb-4 md:mb-6">
+          <p className="text-gray-700 text-base md:text-lg mb-2">ยอดที่ต้องชำระ: <span className="font-extrabold text-green-600 text-2xl md:text-3xl">${serviceFee.toFixed(2)}</span></p>
+          <div className="bg-gray-100 p-3 md:p-4 rounded-lg inline-block">
+            {/* Simulated QR Code */}
+            <img
+              src={`https://placehold.co/180x180/E0E7FF/4F46E5?text=QR+Code+for+%24${serviceFee.toFixed(2)}`}
+              alt="QR Code"
+              className="w-36 h-36 md:w-48 md:h-48 mx-auto rounded-lg shadow-md"
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => { 
+                const target = e.target as HTMLImageElement;
+                target.onerror = null; 
+                target.src = "https://placehold.co/180x180?text=QR+Code"; 
+              }}
+            />
+            <p className="text-xs md:text-sm text-gray-500 mt-2">สแกนรหัส QR เพื่อชำระเงิน</p>
+          </div>
+        </div>
+        <div className="flex flex-col md:flex-row justify-end space-y-3 md:space-y-0 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg text-sm md:text-base transition duration-300 ease-in-out w-full md:w-auto"
+            disabled={loading}
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-sm md:text-base transition duration-300 ease-in-out transform hover:scale-105 w-full md:w-auto"
+            disabled={loading}
+          >
+            {loading ? <LoadingSpinner /> : 'ยืนยันการชำระเงิน'}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// OTP Display Modal Component
+const OTPDisplayModal: React.FC<OTPDisplayModalProps> = ({ packageId, otp, onClose }) => {
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyOTP = async () => {
+    try {
+      await navigator.clipboard.writeText(otp);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    } catch (err) {
+      console.error('Failed to copy OTP:', err);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
+            <span className="text-white font-bold text-2xl">🔑</span>
+          </div>
+          <h3 className="text-xl md:text-2xl font-bold eco-text-primary mb-2">รหัส OTP ของคุณ</h3>
+          <p className="eco-text-secondary text-sm">สำหรับพัสดุ #{packageId}</p>
+        </div>
+        
+        {/* OTP Display */}
+        <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 text-center">
+          <p className="eco-text-secondary text-sm mb-3">รหัส OTP เพื่อเปิดล็อกเกอร์:</p>
+          <div className="text-3xl md:text-4xl font-bold eco-text-primary tracking-widest mb-4 font-mono">
+            {otp}
+          </div>
+          <button
+            onClick={handleCopyOTP}
+            className="inline-flex items-center space-x-2 bg-green-100 hover:bg-green-200 eco-text-primary px-4 py-2 rounded-lg text-sm transition-all duration-300"
+          >
+            <span>{copied ? '✅' : '📋'}</span>
+            <span>{copied ? 'คัดลอกแล้ว!' : 'คัดลอกรหัส'}</span>
+          </button>
+        </div>
+
+        {/* Instructions */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-2 mb-2">
+            <span className="text-blue-500">ℹ️</span>
+            <span className="text-sm font-semibold eco-text-primary">วิธีใช้งาน:</span>
+          </div>
+          <ul className="text-xs eco-text-secondary space-y-1">
+            <li>• ไปที่ล็อกเกอร์ที่ระบุ</li>
+            <li>• ป้อนรหัส OTP นี้ที่หน้าจอล็อกเกอร์</li>
+            <li>• ล็อกเกอร์จะเปิดให้คุณรับพัสดุ</li>
+            <li>• ชำระค่าบริการหลังรับพัสดุ</li>
+          </ul>
+        </div>
+
+        {/* Close button */}
+        <button
+          onClick={onClose}
+          className="eco-button font-semibold py-3 px-6 rounded-lg text-sm md:text-base w-full flex items-center justify-center space-x-2"
+        >
+          <span>✅</span>
+          <span>เข้าใจแล้ว</span>
+        </button>
+      </div>
+    </div>
+  );
+};
+
+// Package Receipt Confirmation Modal Component
+const PackageReceiptConfirmationModal: React.FC<PackageReceiptConfirmationModalProps> = ({ package: pkg, onConfirmReceipt, onClose }) => {
+  const [loading, setLoading] = useState(false);
+
+  const handleConfirm = () => {
+    setLoading(true);
+    setTimeout(() => {
+      setLoading(false);
+      onConfirmReceipt();
+    }, 1500);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+      <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
+        <div className="text-center mb-6">
+          <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
+            <span className="text-white font-bold text-2xl">📦</span>
+          </div>
+          <h3 className="text-xl md:text-2xl font-bold eco-text-primary mb-2">ยืนยันการรับพัสดุ</h3>
+          <p className="eco-text-secondary text-sm">คุณได้รับพัสดุจากล็อกเกอร์แล้วใช่หรือไม่?</p>
+        </div>
+        
+        {/* Package Details */}
+        <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-sm eco-text-secondary font-semibold">หมายเลขพัสดุ:</span>
+              <span className="text-sm eco-text-primary font-bold">#{pkg.id}</span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm eco-text-secondary font-semibold">ล็อกเกอร์:</span>
+              <span className="text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full">
+                🏪 {pkg.lockerId || pkg.targetLockerId}
+              </span>
+            </div>
+            <div className="flex items-center justify-between">
+              <span className="text-sm eco-text-secondary font-semibold">คำอธิบายพัสดุ:</span>
+              <span className="text-sm eco-text-primary">{pkg.description || 'N/A'}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Confirmation Instructions */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="flex items-center space-x-2 mb-2">
+            <span className="text-blue-500">ℹ️</span>
+            <span className="text-sm font-semibold eco-text-primary">โปรดยืนยัน:</span>
+          </div>
+          <ul className="text-xs eco-text-secondary space-y-1">
+            <li>• คุณได้ใช้ OTP เปิดล็อกเกอร์แล้ว</li>
+            <li>• คุณได้รับพัสดุจากล็อกเกอร์แล้ว</li>
+            <li>• ล็อกเกอร์ได้ปิดเรียบร้อยแล้ว</li>
+            <li>• การยืนยันจะทำให้ล็อกเกอร์พร้อมใช้งานใหม่</li>
+          </ul>
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4">
+          <button
+            onClick={onClose}
+            className="bg-gray-200 hover:bg-gray-300 eco-text-primary font-semibold py-3 px-6 rounded-lg text-sm md:text-base transition-all duration-300 w-full md:w-auto border border-gray-300"
+            disabled={loading}
+          >
+            ยกเลิก
+          </button>
+          <button
+            onClick={handleConfirm}
+            className="eco-button font-semibold py-3 px-6 rounded-lg text-sm md:text-base w-full md:w-auto flex items-center justify-center space-x-2"
+            disabled={loading}
+          >
+            {loading ? (
+              <LoadingSpinner />
+            ) : (
+              <>
+                <span>✅</span>
+                <span>ยืนยันการรับพัสดุ</span>
+              </>
+            )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+
+// --- Authentication Component ---
+const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
+
+  const handleLogin = (role: string) => {
+    setLoading(true);
+    setMessage(''); // Clear previous messages
+
+    // Simulate API call for authentication
+    setTimeout(() => {
+      setLoading(false);
+      // In a real app, you'd send credentials to a backend API
+      // and receive a token and user role.
+      // For simulation, we'll just "log in" with the chosen role.
+      setMessageType('success');
+      setMessage(`เข้าสู่ระบบในฐานะ ${role} สำเร็จ!`);
+      onLoginSuccess(role);
+    }, 1500);
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
+      <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
+        <div className="text-center mb-6">
+          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
+            <span className="text-white font-bold text-3xl">🌱</span>
+          </div>
+          <h2 className="text-2xl md:text-3xl font-bold eco-text-primary mb-2">
+            EcoDeliver
+          </h2>
+          <p className="eco-text-secondary text-sm">ระบบจัดส่งเพื่อสิ่งแวดล้อม</p>
+          <div className="carbon-badge mt-3">
+            <span>🌍</span>
+            <span>Carbon Neutral Platform</span>
+          </div>
+        </div>
+        
+        <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
+        <form onSubmit={(e) => e.preventDefault()}> {/* Prevent default form submission */}
+          <div className="mb-4">
+            <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="email">
+              อีเมลมหาวิทยาลัย (จำลอง)
+            </label>
+            <input
+              type="email"
+              id="email"
+              className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+              placeholder="your.email@university.edu"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+            />
+          </div>
+          <div className="mb-6">
+            <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="password">
+              รหัสผ่าน (จำลอง)
+            </label>
+            <input
+              type="password"
+              id="password"
+              className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+              placeholder="********"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+            />
+          </div>
+          
+          {/* Eco Stats */}
+          <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+            <div className="text-center">
+              <div className="grid grid-cols-3 gap-4 text-xs">
+                <div>
+                  <div className="font-bold text-green-600">95%</div>
+                  <div className="eco-text-secondary">Carbon Reduced</div>
+                </div>
+                <div>
+                  <div className="font-bold text-green-600">1000+</div>
+                  <div className="eco-text-secondary">Green Deliveries</div>
+                </div>
+                <div>
+                  <div className="font-bold text-green-600">50</div>
+                  <div className="eco-text-secondary">Trees Saved</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="flex flex-col space-y-3">
+            <button
+              type="button"
+              onClick={() => handleLogin('customer')}
+              className="eco-button font-semibold py-3 px-6 rounded-lg text-base focus:outline-none w-full flex items-center justify-center space-x-2"
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner /> : (
+                <>
+                  <span>👤</span>
+                  <span>เข้าสู่ระบบในฐานะลูกค้า</span>
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLogin('rider')}
+              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 px-6 rounded-lg text-base focus:outline-none transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center space-x-2"
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner /> : (
+                <>
+                  <span>🚲</span>
+                  <span>เข้าสู่ระบบในฐานะไรเดอร์</span>
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleLogin('admin')}
+              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg text-base focus:outline-none transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center space-x-2"
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner /> : (
+                <>
+                  <span>⚙️</span>
+                  <span>เข้าสู่ระบบในฐานะผู้ดูแลระบบ</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+        
+        {/* Footer */}
+        <div className="mt-6 text-center">
+          <p className="text-xs eco-text-secondary">
+            🌱 ร่วมกันสร้างอนาคตที่ยั่งยืน 🌱
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Customer Dashboard ---
+const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdatePackage, userId, serviceFee, lockers, riders, onUpdateLocker }) => {
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
+  const [showPaymentModal, setShowPaymentModal] = useState(false);
+  const [packageToPay, setPackageToPay] = useState<string | null>(null);
+
+  const [showBookLockerModal, setShowBookLockerModal] = useState(false);
+  const [selectedLockerId, setSelectedLockerId] = useState('');
+  const [selectedRiderId, setSelectedRiderId] = useState(''); // New state for selected rider
+  const [recipientName, setRecipientName] = useState('');
+  const [packageDescription, setPackageDescription] = useState('');
+
+  const [showOTPModal, setShowOTPModal] = useState(false);
+  const [otpToShow, setOtpToShow] = useState('');
+  const [otpPackageId, setOtpPackageId] = useState('');
+
+  // New state for notifications and package confirmation
+  const [notifications, setNotifications] = useState<string[]>([]);
+  const [showConfirmReceiptModal, setShowConfirmReceiptModal] = useState(false);
+  const [packageToConfirmReceipt, setPackageToConfirmReceipt] = useState<Package | null>(null);
+
+  // Check for new packages stored in locker and notify customer
+  React.useEffect(() => {
+    const customerPackages = packages.filter(pkg => pkg.customer === userId);
+    const newStoredPackages = customerPackages.filter(pkg => 
+      pkg.status === 'Stored in Locker' && 
+      pkg.customerRetrievalOTP && 
+      !notifications.includes(pkg.id)
+    );
+    
+    if (newStoredPackages.length > 0) {
+      const newNotifications = newStoredPackages.map(pkg => pkg.id);
+      setNotifications(prev => [...prev, ...newNotifications]);
+      
+      // Show notification message
+      if (newStoredPackages.length === 1) {
+        const pkg = newStoredPackages[0];
+        setMessageType('success');
+        if (pkg.paid) {
+          setMessage(`🎉 ดีใจด้วย! พัสดุ #${pkg.id} ของคุณถูกจัดเก็บในล็อกเกอร์ ${pkg.lockerId} แล้ว! 
+📱 คุณสามารถรับ OTP และไปรับพัสดุได้เลย 
+✅ ไม่ต้องชำระเงินเพิ่ม (ชำระแล้วตอนจอง)
+🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
+        } else {
+          setMessage(`🎉 ดีใจด้วย! พัสดุ #${pkg.id} ของคุณถูกจัดเก็บในล็อกเกอร์ ${pkg.lockerId} แล้ว! 
+📱 คุณสามารถรับ OTP และไปรับพัสดุได้เลย 
+💳 จะต้องชำระค่าบริการล็อกเกอร์ก่อนรับพัสดุ
+🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
+        }
+      } else {
+        setMessageType('success');
+        setMessage(`🎉 ดีใจด้วย! มีพัสดุ ${newStoredPackages.length} ชิ้นของคุณถูกจัดเก็บในล็อกเกอร์แล้ว! 
+📱 คุณสามารถรับ OTP และไปรับพัสดุได้เลย`);
+      }
+    }
+  }, [packages, userId, notifications]);
+
+
+  const handleBookLocker = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    if (!selectedLockerId) {
+      setMessageType('error');
+      setMessage('กรุณาเลือกล็อกเกอร์');
+      return;
+    }
+    if (!selectedRiderId) {
+      setMessageType('error');
+      setMessage('กรุณาเลือกไรเดอร์');
+      return;
+    }
+
+    // Simulate booking a locker and creating a new package
+    const newPackageId = 'PK' + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+    const newPackage: Package = {
+      id: newPackageId,
+      customer: userId, // The customer is the one booking/sending
+      recipient: recipientName || 'Self', // Can be self or another recipient
+      description: packageDescription || 'N/A',
+      status: 'Locker Reserved, Awaiting Rider Pickup', // New status for customer-initiated booking
+      rider: selectedRiderId, // Assign the selected rider
+      targetLockerId: selectedLockerId,
+      riderLockerAccessCode: null, // Will be generated when rider accepts
+      customerRetrievalOTP: null, // Will be generated when package is stored
+      paid: false, // Will be set to true after payment
+      lockerId: null
+    };
+
+    onUpdatePackage([...packages, newPackage]);
+    // Mark the selected locker as occupied
+    onUpdateLocker(lockers.map(l => l.id === selectedLockerId ? { ...l, status: 'Occupied' } : l));
+
+    setMessageType('success');
+    setMessage(`จองล็อกเกอร์ ${selectedLockerId} และมอบหมายให้ ${riders.find(r => r.id === selectedRiderId)?.name} สำหรับพัสดุ ${newPackageId} แล้ว`);
+    handleCloseBookLockerModal();
+    
+    // Open payment modal immediately after booking
+    setPackageToPay(newPackageId);
+    setShowPaymentModal(true);
+  };
+
+  const handleRequestLocker = (packageId: string) => {
+    setMessage('');
+    // This flow is for existing 'Out for Delivery' packages being redirected to locker
+    const updatedPackages = packages.map(pkg =>
+      pkg.id === packageId && pkg.status === 'Out for Delivery'
+        ? { ...pkg, status: 'Locker Requested', rider: 'Pending Assignment' } // This flow doesn't involve customer selecting rider
+        : pkg
+    );
+    onUpdatePackage(updatedPackages);
+    setMessageType('success');
+    setMessage(`ร้องขอจัดเก็บพัสดุ ${packageId} ในล็อกเกอร์แล้ว ไรเดอร์จะได้รับการแจ้งเตือน`);
+  };
+
+  const handleReceiveOTP = (packageId: string) => {
+    setMessage('');
+    const pkg = packages.find(p => p.id === packageId);
+    if (pkg && pkg.status.includes('Locker') && pkg.customerRetrievalOTP) {
+      // Show OTP in popup instead of message
+      setOtpToShow(pkg.customerRetrievalOTP);
+      setOtpPackageId(packageId);
+      setShowOTPModal(true);
+    } else {
+      setMessageType('error');
+      setMessage('พัสดุยังไม่อยู่ในล็อกเกอร์ หรือ OTP ยังไม่พร้อมใช้งาน');
+    }
+  };
+
+  const handleConfirmPackageReceipt = (packageId: string) => {
+    setMessage('');
+    const pkg = packages.find(p => p.id === packageId);
+    if (pkg && pkg.status === 'Stored in Locker' && pkg.customerRetrievalOTP) {
+      setPackageToConfirmReceipt(pkg);
+      setShowConfirmReceiptModal(true);
+    } else {
+      setMessageType('error');
+      setMessage('ไม่สามารถยืนยันการรับพัสดุได้ในขณะนี้');
+    }
+  };
+
+  const handleFinalConfirmReceipt = () => {
+    if (!packageToConfirmReceipt) return;
+
+    const packageId = packageToConfirmReceipt.id;
+    const lockerId = packageToConfirmReceipt.lockerId || packageToConfirmReceipt.targetLockerId;
+
+    // Update package status to retrieved
+    const updatedPackages = packages.map(p =>
+      p.id === packageId ? { 
+        ...p, 
+        status: 'Package Retrieved', 
+        customerRetrievalOTP: null,
+        lockerId: null 
+      } : p
+    );
+    onUpdatePackage(updatedPackages);
+
+    // Free the locker - change status to Available
+    if (lockerId) {
+      const updatedLockers = lockers.map(l => 
+        l.id === lockerId ? { ...l, status: 'Available' } : l
+      );
+      onUpdateLocker(updatedLockers);
+    }
+
+    setMessageType('success');
+    setMessage(`🎉 ยืนยันการรับพัสดุ #${packageId} เรียบร้อยแล้ว! 
+✅ ล็อกเกอร์ ${lockerId} ได้ถูกปลดล็อกและพร้อมใช้งาน 
+🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
+    
+    setShowConfirmReceiptModal(false);
+    setPackageToConfirmReceipt(null);
+  };
+
+  const handleCloseBookLockerModal = () => {
+    setShowBookLockerModal(false);
+    setSelectedLockerId('');
+    setSelectedRiderId('');
+    setRecipientName('');
+    setPackageDescription('');
+  };
+
+  const handleConfirmPayment = (packageId: string) => {
+    const packageToUpdate = packages.find(p => p.id === packageId);
+    
+    if (!packageToUpdate) return;
+    
+    let newStatus = '';
+    let shouldFreeLocker = false;
+    
+    // Determine new status based on current status
+    if (packageToUpdate.status === 'Locker Reserved, Awaiting Rider Pickup') {
+      // Payment after booking locker - ready for rider pickup
+      newStatus = 'Paid, Ready for Rider Pickup';
+    } else if (packageToUpdate.status === 'Stored in Locker') {
+      // Payment after retrieving package - completely done
+      newStatus = 'Retrieved & Paid';
+      shouldFreeLocker = true;
+    } else {
+      // Default case - mark as paid
+      newStatus = 'Retrieved & Paid';
+      shouldFreeLocker = true;
+    }
+    
+    const updatedPackages = packages.map(p =>
+      p.id === packageId ? { ...p, paid: true, status: newStatus } : p
+    );
+    onUpdatePackage(updatedPackages);
+
+    // Free the locker only if package is completely done
+    if (shouldFreeLocker) {
+      const retrievedPackage = packages.find(p => p.id === packageId);
+      if (retrievedPackage && (retrievedPackage.lockerId || retrievedPackage.targetLockerId)) {
+        const lockerIdToUpdate = retrievedPackage.lockerId || retrievedPackage.targetLockerId;
+        onUpdateLocker(lockers.map(l => l.id === lockerIdToUpdate ? { ...l, status: 'Available' } : l));
+      }
+    }
+
+    setMessageType('success');
+    if (newStatus === 'Paid, Ready for Rider Pickup') {
+      setMessage(`ชำระเงินสำเร็จ! พัสดุ ${packageId} พร้อมสำหรับไรเดอร์มารับแล้ว`);
+    } else {
+      setMessage(`ชำระค่าบริการสำหรับพัสดุ ${packageId} แล้ว`);
+    }
+    setShowPaymentModal(false);
+    setPackageToPay(null);
+  };
+
+  const customerPackages = packages.filter(pkg => pkg.customer === userId);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-4 md:p-6 font-inter">
+      <div className="max-w-6xl mx-auto">
+        {/* Hero Section */}
+        <div className="eco-card p-6 md:p-8 mb-6 text-center">
+          <div className="flex items-center justify-center space-x-3 mb-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation">
+              <span className="text-white font-bold text-2xl">🌱</span>
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold eco-text-primary">
+              แดชบอร์ดลูกค้า
+            </h2>
+          </div>
+          <p className="eco-text-secondary mb-4">
+            ยินดีต้อนรับสู่ระบบจัดส่งเพื่อสิ่งแวดล้อม 
+            <span className="inline-block mx-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
+              ID: {userId}
+            </span>
+          </p>
+          <div className="flex items-center justify-center space-x-6 text-sm">
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">🌍</span>
+              <span className="eco-text-secondary">Carbon Neutral Delivery</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">♻️</span>
+              <span className="eco-text-secondary">Eco-Friendly Packaging</span>
+            </div>
+            <div className="flex items-center space-x-2">
+              <span className="text-green-500">🚲</span>
+              <span className="eco-text-secondary">Green Transportation</span>
+            </div>
+          </div>
+        </div>
+        
+        <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
+
+        {/* Available Lockers Section - Minimal Eco Design */}
+        <div className="eco-card mb-6 md:mb-8 p-6 md:p-8">
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <span className="text-2xl">🏪</span>
+            <h3 className="text-xl md:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่พร้อมใช้งาน</h3>
+            <div className="carbon-badge text-xs">
+              <span>⚡</span>
+              <span>Zero Emission</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {lockers.filter(locker => locker.status === 'Available').length === 0 ? (
+              <p className="col-span-full text-center eco-text-secondary">🌱 ไม่มีล็อกเกอร์ว่างในขณะนี้</p>
+            ) : (
+              lockers.filter(locker => locker.status === 'Available').map((locker) => (
+                <div
+                  key={locker.id}
+                  className="realistic-locker available cursor-pointer h-40 md:h-48"
+                  onClick={() => {
+                    console.log(`🌱 Eco Locker ${locker.id} selected - *soft beep*`);
+                    setSelectedLockerId(locker.id);
+                    setShowBookLockerModal(true);
+                  }}
+                >
+                  {/* LED Status Light */}
+                  <div className="locker-led available"></div>
+                  
+                  {/* Digital Display */}
+                  <div className="locker-display">READY</div>
+                  
+                  {/* Locker Door */}
+                  <div className="locker-door">
+                    {/* Handle */}
+                    <div className="locker-handle"></div>
+                    
+                    {/* Lock Mechanism */}
+                    <div className="locker-lock"></div>
+                    
+                    {/* Ventilation */}
+                    <div className="locker-vents"></div>
+                  </div>
+                  
+                  {/* Locker Number */}
+                  <div className="locker-number">{locker.id}</div>
+                  
+                  {/* Location Badge */}
+                  <div className="absolute top-2 left-20 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold">
+                    📍 {locker.location}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Occupied Lockers Section - Minimal Eco Design */}
+        <div className="eco-card mb-6 md:mb-8 p-6 md:p-8">
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <span className="text-2xl">🔒</span>
+            <h3 className="text-xl md:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่ใช้งานอยู่</h3>
+            <div className="bg-orange-100 text-orange-700 text-xs px-3 py-1 rounded-full font-semibold">
+              <span>📦</span>
+              <span>In Use</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+            {lockers.filter(locker => locker.status === 'Occupied').length === 0 ? (
+              <p className="col-span-full text-center eco-text-secondary">🌱 ไม่มีล็อกเกอร์ที่ถูกใช้งานในขณะนี้</p>
+            ) : (
+              lockers.filter(locker => locker.status === 'Occupied').map((locker) => (
+                <div
+                  key={locker.id}
+                  className="realistic-locker occupied cursor-not-allowed h-40 md:h-48"
+                >
+                  {/* LED Status Light */}
+                  <div className="locker-led occupied"></div>
+                  
+                  {/* Digital Display */}
+                  <div className="locker-display occupied">BUSY</div>
+                  
+                  {/* Locker Door */}
+                  <div className="locker-door">
+                    {/* Handle */}
+                    <div className="locker-handle"></div>
+                    
+                    {/* Lock Mechanism */}
+                    <div className="locker-lock"></div>
+                    
+                    {/* Ventilation */}
+                    <div className="locker-vents"></div>
+                    
+                    {/* Package Indicator */}
+                    <div className="package-indicator">📦</div>
+                  </div>
+                  
+                  {/* Keypad */}
+                  <div className="locker-keypad">
+                    <div className="keypad-button">1</div>
+                    <div className="keypad-button">2</div>
+                    <div className="keypad-button">3</div>
+                    <div className="keypad-button">4</div>
+                    <div className="keypad-button">5</div>
+                    <div className="keypad-button">6</div>
+                    <div className="keypad-button">7</div>
+                    <div className="keypad-button">8</div>
+                    <div className="keypad-button">9</div>
+                  </div>
+                  
+                  {/* Locker Number */}
+                  <div className="locker-number">{locker.id}</div>
+                  
+                  {/* Location Badge */}
+                  <div className="absolute top-2 left-20 bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold">
+                    📍 {locker.location}
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* Package Status Section */}
+        <div className="eco-card p-6 md:p-8">
+          <div className="flex items-center justify-center space-x-3 mb-6">
+            <span className="text-2xl">📦</span>
+            <h3 className="text-xl md:text-2xl font-bold eco-text-primary">สถานะพัสดุของคุณ</h3>
+            <div className="carbon-badge text-xs">
+              <span>🚚</span>
+              <span>Green Delivery</span>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+            {customerPackages.length === 0 ? (
+              <div className="col-span-full text-center py-8">
+                <div className="text-6xl mb-4">🌱</div>
+                <p className="eco-text-secondary">ไม่มีพัสดุในขณะนี้</p>
+                <p className="text-sm eco-text-secondary mt-2">เริ่มต้นการจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+              </div>
+            ) : (
+              customerPackages.map((pkg) => (
+                <div
+                  key={pkg.id}
+                  className="eco-card p-4 hover:shadow-lg transition-all duration-300 group"
+                >
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="text-lg font-bold eco-text-primary">พัสดุ #{pkg.id}</h3>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-green-500">🌿</span>
+                      <span className="text-xs eco-text-secondary">Eco Package</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-2 mb-4">
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold eco-text-secondary text-sm">สถานะ:</span>
+                      <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                        pkg.status.includes('Delivered') || pkg.status.includes('Paid') || pkg.status.includes('Retrieved') 
+                          ? 'bg-green-100 text-green-600' 
+                          : pkg.status.includes('Locker') || pkg.status.includes('Awaiting Rider') || pkg.status.includes('En Route') 
+                          ? 'bg-blue-100 text-blue-600' 
+                          : 'bg-orange-100 text-orange-600'
+                      }`}>
+                        {pkg.status}
+                      </span>
+                    </div>
+                    
+                    <div className="flex items-center space-x-2">
+                      <span className="font-semibold eco-text-secondary text-sm">ไรเดอร์:</span>
+                      <span className="text-sm eco-text-primary">
+                        {riders.find(r => r.id === pkg.rider)?.name || pkg.rider || 'N/A'}
+                      </span>
+                    </div>
+                    
+                    {pkg.targetLockerId && (
+                      <div className="flex items-center space-x-2">
+                        <span className="font-semibold eco-text-secondary text-sm">ล็อกเกอร์เป้าหมาย:</span>
+                        <span className="text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full">
+                          🏪 {pkg.targetLockerId}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                {pkg.riderLockerAccessCode && pkg.status === 'Picked Up, En Route to Locker' && (
+                  <p className="text-xs md:text-sm text-gray-600 mb-1 text-red-500">
+                    <span className="font-semibold">รหัสเข้าถึงล็อกเกอร์ไรเดอร์:</span> {pkg.riderLockerAccessCode} (สำหรับไรเดอร์)
+                  </p>
+                )}
+                <div className="mt-3 md:mt-4 space-y-2">
+                  {/* Only show "Request Locker Storage" if it's an "Out for Delivery" package that needs redirection */}
+                  {pkg.status === 'Out for Delivery' && (
+                    <button
+                      onClick={() => handleRequestLocker(pkg.id)}
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105"
+                    >
+                      ร้องขอจัดเก็บในล็อกเกอร์ (เปลี่ยนเส้นทาง)
+                    </button>
+                  )}
+                  {pkg.status === 'Stored in Locker' && (
+                    <>
+                      <button
+                        onClick={() => handleReceiveOTP(pkg.id)}
+                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105"
+                      >
+                        🔑 รับ OTP ล็อกเกอร์
+                      </button>
+                      <button
+                        onClick={() => handleConfirmPackageReceipt(pkg.id)}
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105"
+                      >
+                        ✅ ยืนยันรับพัสดุแล้ว
+                      </button>
+                    </>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+      {showPaymentModal && packageToPay && (
+        <PaymentModal
+          packageId={packageToPay}
+          serviceFee={serviceFee}
+          onConfirmPayment={handleConfirmPayment}
+          onClose={() => setShowPaymentModal(false)}
+        />
+      )}
+      {showBookLockerModal && (
+        <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
+          <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
+            <div className="text-center mb-6">
+              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
+                <span className="text-white font-bold text-2xl">🌱</span>
+              </div>
+              <h3 className="text-xl md:text-2xl font-bold eco-text-primary mb-2">จองล็อกเกอร์ Eco-Friendly</h3>
+              <p className="eco-text-secondary text-sm">การจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+            </div>
+            
+            {/* Display selected locker info */}
+            {selectedLockerId && (
+              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2 mb-3">
+                  <span className="text-green-500">🏪</span>
+                  <h4 className="font-semibold eco-text-primary">ล็อกเกอร์ที่เลือก</h4>
+                </div>
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm eco-text-secondary">รหัส:</span>
+                    <span className="text-sm font-medium eco-text-primary bg-green-100 px-2 py-1 rounded-full">
+                      {selectedLockerId}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm eco-text-secondary">ที่ตั้ง:</span>
+                    <span className="text-sm eco-text-primary">
+                      📍 {lockers.find(l => l.id === selectedLockerId)?.location}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm eco-text-secondary">สถานะ:</span>
+                    <div className="flex items-center space-x-1">
+                      <div className="eco-status w-2 h-2"></div>
+                      <span className="text-sm text-green-600 font-medium">ว่าง</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            <form onSubmit={handleBookLocker}>
+              <div className="mb-4">
+                <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="recipientName">
+                  ชื่อผู้รับ (ถ้าแตกต่างจากคุณ):
+                </label>
+                <input
+                  type="text"
+                  id="recipientName"
+                  className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                  placeholder="เช่น สมชาย"
+                  value={recipientName}
+                  onChange={(e) => setRecipientName(e.target.value)}
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="packageDescription">
+                  คำอธิบายพัสดุ:
+                </label>
+                <input
+                  type="text"
+                  id="packageDescription"
+                  className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                  placeholder="เช่น หนังสือ, เสื้อผ้า"
+                  value={packageDescription}
+                  onChange={(e) => setPackageDescription(e.target.value)}
+                  required
+                />
+              </div>
+              
+              {/* Show locker selection only if no locker is pre-selected */}
+              {!selectedLockerId && (
+                <div className="mb-4">
+                  <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="lockerSelect">
+                    เลือกล็อกเกอร์สำหรับจัดเก็บ:
+                  </label>
+                  <select
+                    id="lockerSelect"
+                    className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                    value={selectedLockerId}
+                    onChange={(e) => setSelectedLockerId(e.target.value)}
+                    required
+                  >
+                    <option value="">-- เลือกล็อกเกอร์ --</option>
+                    {lockers.filter(l => l.status === 'Available').map(locker => (
+                      <option key={locker.id} value={locker.id}>
+                        🏪 {locker.id} ({locker.location})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              )}
+              
+              <div className="mb-6">
+                <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="riderSelect">
+                  เลือกไรเดอร์:
+                </label>
+                <select
+                  id="riderSelect"
+                  className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                  value={selectedRiderId}
+                  onChange={(e) => setSelectedRiderId(e.target.value)}
+                  required
+                >
+                  <option value="">-- เลือกไรเดอร์ --</option>
+                  {riders.map(rider => (
+                    <option key={rider.id} value={rider.id}>
+                      🚲 {rider.name}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              
+              {/* Eco-friendly message */}
+              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2 mb-2">
+                  <span className="text-green-500">🌍</span>
+                  <span className="text-sm font-semibold eco-text-primary">การจัดส่งเพื่อสิ่งแวดล้อม</span>
+                </div>
+                <p className="text-xs eco-text-secondary">
+                  การจัดส่งแต่ละครั้งช่วยลดการปล่อยคาร์บอน และใช้บรรจุภัณฑ์ที่เป็นมิตรกับสิ่งแวดล้อม
+                </p>
+              </div>
+              
+              <div className="flex flex-col md:flex-row justify-end space-y-3 md:space-y-0 md:space-x-4">
+                <button
+                  type="button"
+                  onClick={handleCloseBookLockerModal}
+                  className="bg-gray-200 hover:bg-gray-300 eco-text-primary font-semibold py-3 px-6 rounded-lg text-sm md:text-base transition-all duration-300 w-full md:w-auto border border-gray-300"
+                >
+                  ยกเลิก
+                </button>
+                <button
+                  type="submit"
+                  className="eco-button font-semibold py-3 px-6 rounded-lg text-sm md:text-base w-full md:w-auto flex items-center justify-center space-x-2"
+                >
+                  <span>🌱</span>
+                  <span>จองล็อกเกอร์</span>
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+      {showOTPModal && (
+        <OTPDisplayModal
+          packageId={otpPackageId}
+          otp={otpToShow}
+          onClose={() => setShowOTPModal(false)}
+        />
+      )}
+      {showConfirmReceiptModal && packageToConfirmReceipt && (
+        <PackageReceiptConfirmationModal
+          package={packageToConfirmReceipt}
+          onConfirmReceipt={handleFinalConfirmReceipt}
+          onClose={() => setShowConfirmReceiptModal(false)}
+        />
+      )}
+      </div>
+    </div>
+  );
+};
+
+// --- Rider Dashboard ---
+const RiderDashboard: React.FC<RiderDashboardProps> = ({ packages, onUpdatePackage, lockers, userId, serviceFee, commissionRate, riders }) => {
+  const [selectedJobId, setSelectedJobId] = useState<string | null>(null);
+  const [deliveryStatus, setDeliveryStatus] = useState('');
+  const [lockerNumber, setLockerNumber] = useState('');
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
+
+  // Filter jobs for the current rider: either assigned directly or 'Pending' for general pickup
+  const currentRiderId = userId; // Use userId directly as the rider ID
+  const availableJobs = packages.filter(pkg =>
+    (pkg.status === 'Locker Reserved, Awaiting Rider Pickup' && pkg.rider === currentRiderId) || // Assigned to this rider
+    (pkg.status === 'Paid, Ready for Rider Pickup' && pkg.rider === currentRiderId) || // Paid and ready for pickup
+    (pkg.status === 'Out for Delivery' && pkg.rider === currentRiderId) || // Assigned direct delivery
+    (pkg.status === 'Locker Requested' && pkg.rider === 'Pending Assignment') // Any rider can pick up redirection requests
+    // Note: 'Pending' status (unassigned initial jobs) can be added here if needed
+  );
+
+  const handleAcceptJob = (packageId: string) => {
+    setMessage('');
+    const updatedPackages = packages.map(pkg => {
+      if (pkg.id === packageId) {
+        let newStatus = pkg.status;
+        let riderLockerAccessCode = pkg.riderLockerAccessCode;
+
+        if (pkg.status === 'Locker Reserved, Awaiting Rider Pickup' || 
+            pkg.status === 'Paid, Ready for Rider Pickup' || 
+            pkg.status === 'Locker Requested') {
+          newStatus = 'Picked Up, En Route to Locker';
+          riderLockerAccessCode = generateOTP(); // Generate code for rider to open the target locker
+        } else if (pkg.status === 'Pending') { // For general unassigned jobs if we add them later
+          newStatus = 'Out for Delivery';
+        }
+        return { ...pkg, status: newStatus, rider: currentRiderId, riderLockerAccessCode: riderLockerAccessCode };
+      }
+      return pkg;
+    });
+    onUpdatePackage(updatedPackages);
+    setMessageType('success');
+    setMessage(`รับงานสำหรับพัสดุ ${packageId} แล้ว`);
+  };
+
+  const handleUpdateStatus = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    if (!selectedJobId || !deliveryStatus) {
+      setMessageType('error');
+      setMessage('กรุณาเลือกพัสดุและสถานะ');
+      return;
+    }
+
+    let updatedPackages = [...packages];
+    let currentPackage = updatedPackages.find(pkg => pkg.id === selectedJobId);
+
+    if (!currentPackage) return;
+
+    if (deliveryStatus === 'Delivered') {
+      currentPackage.status = 'Delivered';
+      currentPackage.lockerId = null;
+      currentPackage.customerRetrievalOTP = null; // Clear customer OTP
+      currentPackage.riderLockerAccessCode = null; // Clear rider access code
+      currentPackage.paid = true; // Assume direct delivery means paid
+      setMessageType('success');
+      setMessage(`พัสดุ ${selectedJobId} ถูกทำเครื่องหมายว่าจัดส่งแล้ว`);
+    } else if (deliveryStatus === 'Stored in Locker') {
+      // For both 'Locker Requested' and 'Picked Up, En Route to Locker' flows
+      // Use targetLockerId if pre-booked, otherwise require manual input
+      const finalLockerId = currentPackage.targetLockerId || lockerNumber;
+      if (!finalLockerId) {
+         setMessageType('error');
+         setMessage('กรุณาป้อนหมายเลขล็อกเกอร์หรือเลือกงานที่มีล็อกเกอร์เป้าหมาย');
+         return;
+      }
+      const customerOtp = generateOTP(); // OTP for customer retrieval
+
+      // Store the original paid status before changing status
+      const wasAlreadyPaid = currentPackage.paid;
+      const wasPreBookedLocker = currentPackage.status === 'Paid, Ready for Rider Pickup';
+      
+      currentPackage.status = 'Stored in Locker';
+      currentPackage.lockerId = finalLockerId;
+      currentPackage.customerRetrievalOTP = customerOtp;
+      currentPackage.riderLockerAccessCode = null; // Rider's code is no longer needed
+      
+      // Keep payment status: if customer already paid (pre-booked locker), don't require payment again
+      if (wasPreBookedLocker || wasAlreadyPaid) {
+        currentPackage.paid = true; // Customer already paid when booking locker
+      } else {
+        currentPackage.paid = false; // Customer needs to pay for locker storage (redirected packages)
+      }
+
+      // Simulate updating locker availability (if a real locker system)
+      // In a real app, this would be an API call to the locker system.
+      // E.g., `updateLockerStatus(lockerNumber, 'occupied', packageId)`
+      // The locker status is updated in App.js when the package is retrieved and paid.
+
+      setMessageType('success');
+      if (wasPreBookedLocker || wasAlreadyPaid) {
+        setMessage(`🎉 พัสดุ ${selectedJobId} จัดเก็บในล็อกเกอร์ ${finalLockerId} แล้ว! 
+📱 ระบบได้ส่งการแจ้งเตือนไปยังลูกค้าแล้ว 
+🔑 OTP สำหรับลูกค้า: ${customerOtp}
+✅ ลูกค้าได้ชำระเงินแล้วตั้งแต่จองล็อกเกอร์ ไม่ต้องชำระเพิ่ม
+💡 ลูกค้าสามารถใช้ OTP นี้เพื่อเปิดล็อกเกอร์และรับพัสดุได้เลย`);
+      } else {
+        setMessage(`🎉 พัสดุ ${selectedJobId} จัดเก็บในล็อกเกอร์ ${finalLockerId} แล้ว! 
+📱 ระบบได้ส่งการแจ้งเตือนไปยังลูกค้าแล้ว 
+🔑 OTP สำหรับลูกค้า: ${customerOtp}
+💳 ลูกค้าจะต้องชำระค่าบริการล็อกเกอร์ก่อนรับพัสดุ
+💡 ลูกค้าสามารถใช้ OTP นี้เพื่อเปิดล็อกเกอร์และรับพัสดุได้`);
+      }
+    } else if (deliveryStatus === 'Failed') {
+      currentPackage.status = 'Delivery Failed';
+      currentPackage.lockerId = null;
+      currentPackage.customerRetrievalOTP = null;
+      currentPackage.riderLockerAccessCode = null;
+      currentPackage.paid = false;
+      setMessageType('error');
+      setMessage(`การจัดส่งพัสดุ ${selectedJobId} ล้มเหลว`);
+    }
+
+    onUpdatePackage(updatedPackages);
+    setSelectedJobId(null);
+    setDeliveryStatus('');
+    setLockerNumber('');
+  };
+
+  const completedDeliveries = packages.filter(pkg => pkg.status === 'Delivered' || pkg.status === 'Retrieved & Paid');
+  const totalEarningsFromPackages = completedDeliveries.length * serviceFee;
+  const riderShare = totalEarningsFromPackages * (1 - commissionRate);
+
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-500 to-teal-700 p-4 md:p-6 font-inter text-gray-800">
+      <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6 md:mb-8">
+          แดชบอร์ดไรเดอร์
+        </h2>
+        <p className="text-center text-gray-600 mb-4 md:mb-6 text-sm md:text-base">ยินดีต้อนรับไรเดอร์! รหัสผู้ใช้ของคุณ: <span className="font-mono text-xs md:text-sm bg-gray-100 p-1 rounded">{userId}</span></p>
+        <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
+
+        <div className="mb-6 md:mb-8 p-4 md:p-6 bg-blue-50 rounded-lg shadow-inner">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">งานจัดส่งที่พร้อมใช้งาน</h3>
+          {availableJobs.length === 0 ? (
+            <p className="text-gray-600 text-sm md:text-base">ไม่มีงานใหม่ในขณะนี้</p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {availableJobs.map(job => (
+                <div key={job.id} className="bg-gray-50 p-4 rounded-lg shadow-md flex flex-col sm:flex-row justify-between items-start sm:items-center space-y-2 sm:space-y-0">
+                  <div>
+                    <p className="font-semibold text-base md:text-lg">พัสดุ #{job.id}</p>
+                    <p className="text-xs md:text-sm text-gray-600">สถานะ: {job.status}</p>
+                    {job.targetLockerId && <p className="text-xs md:text-sm text-gray-600">ล็อกเกอร์เป้าหมาย: {job.targetLockerId}</p>}
+                  </div>
+                  <button
+                    onClick={() => handleAcceptJob(job.id)}
+                    className="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105 w-full sm:w-auto"
+                  >
+                    รับงาน
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="mb-6 md:mb-8 p-4 md:p-6 bg-blue-50 rounded-lg shadow-inner">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">อัปเดตสถานะการจัดส่ง</h3>
+          <form onSubmit={handleUpdateStatus}>
+            <div className="mb-3 md:mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-1 md:mb-2" htmlFor="packageSelect">
+                เลือกพัสดุ:
+              </label>
+              <select
+                id="packageSelect"
+                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base"
+                value={selectedJobId || ''}
+                onChange={(e) => setSelectedJobId(e.target.value)}
+                required
+              >
+                <option value="">-- เลือกพัสดุ --</option>
+                {packages.filter(pkg => pkg.rider === currentRiderId && !pkg.status.includes('Delivered') && !pkg.status.includes('Failed') && !pkg.status.includes('Stored in Locker') && !pkg.status.includes('Retrieved')).map(pkg => (
+                  <option key={pkg.id} value={pkg.id}>
+                    พัสดุ #{pkg.id} (สถานะปัจจุบัน: {pkg.status}) {pkg.riderLockerAccessCode ? `(รหัสล็อกเกอร์ไรเดอร์: ${pkg.riderLockerAccessCode})` : ''}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <div className="mb-3 md:mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-1 md:mb-2" htmlFor="deliveryStatus">
+                สถานะการจัดส่ง:
+              </label>
+              <select
+                id="deliveryStatus"
+                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base"
+                value={deliveryStatus}
+                onChange={(e) => setDeliveryStatus(e.target.value)}
+                required
+              >
+                <option value="">-- เลือกสถานะ --</option>
+                <option value="Delivered">จัดส่งแล้ว (ถึงผู้รับโดยตรง)</option>
+                <option value="Stored in Locker">จัดเก็บในล็อกเกอร์</option>
+                <option value="Failed">ล้มเหลว</option>
+              </select>
+            </div>
+
+            {deliveryStatus === 'Stored in Locker' && !packages.find(p => p.id === selectedJobId)?.targetLockerId && (
+              <div className="mb-3 md:mb-4">
+                <label className="block text-gray-700 text-sm font-bold mb-1 md:mb-2" htmlFor="lockerNumber">
+                  หมายเลขล็อกเกอร์ (ถ้าไม่ได้จองไว้ล่วงหน้า):
+                </label>
+                <input
+                  type="text"
+                  id="lockerNumber"
+                  className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base"
+                  placeholder="เช่น A101"
+                  value={lockerNumber}
+                  onChange={(e) => setLockerNumber(e.target.value)}
+                />
+              </div>
+            )}
+
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 w-full"
+            >
+              อัปเดตสถานะ
+            </button>
+          </form>
+        </div>
+
+        <div className="p-4 md:p-6 bg-purple-50 rounded-lg shadow-inner">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">รายได้ของคุณ</h3>
+          <p className="text-sm md:text-lg">
+            <span className="font-semibold">จำนวนพัสดุที่จัดส่ง/จัดเก็บแล้ว:</span>{' '}
+            <span className="font-bold text-lg md:text-xl text-indigo-700">{completedDeliveries.length}</span>
+          </p>
+          <p className="text-sm md:text-lg">
+            <span className="font-semibold">รายได้รวมจากค่าบริการ (ก่อนหักคอมมิชชัน):</span>{' '}
+            <span className="font-bold text-lg md:text-xl text-green-700">${totalEarningsFromPackages.toFixed(2)}</span>
+          </p>
+          <p className="text-sm md:text-lg">
+            <span className="font-semibold">ส่วนแบ่งไรเดอร์ (หลังหัก {commissionRate * 100}% คอมมิชชัน):</span>{' '}
+            <span className="font-bold text-lg md:text-xl text-orange-700">${riderShare.toFixed(2)}</span>
+          </p>
+          <p className="text-xs md:text-sm text-gray-600 mt-2">
+            (รายได้จำลองตามการจัดส่งที่เสร็จสมบูรณ์)
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Admin Dashboard ---
+const AdminDashboard: React.FC<AdminDashboardProps> = ({ packages, lockers, onUpdateLocker, userId }) => {
+  const [serviceFee, setServiceFee] = useState(2.50); // Default fee
+  const [commissionRate, setCommissionRate] = useState(0.15); // Default 15% commission
+  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'success' | 'error' | 'info'>('info');
+
+  const handleUpdateSettings = (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage('');
+    // Simulate API call to update settings
+    setMessageType('success');
+    setMessage('ค่าบริการและอัตราคอมมิชชันได้รับการอัปเดตแล้ว!');
+  };
+
+  const handleLockerStatusChange = (lockerId: string, newStatus: string) => {
+    setMessage('');
+    const updatedLockers = lockers.map(locker =>
+      locker.id === lockerId ? { ...locker, status: newStatus } : locker
+    );
+    onUpdateLocker(updatedLockers);
+    setMessageType('success');
+    setMessage(`สถานะล็อกเกอร์ ${lockerId} อัปเดตเป็น ${newStatus} แล้ว`);
+  };
+
+  const paidPackages = packages.filter(pkg => pkg.paid);
+  const totalRevenue = paidPackages.length * serviceFee;
+  const platformEarnings = totalRevenue * commissionRate;
+  const riderPayouts = totalRevenue * (1 - commissionRate);
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-red-500 to-orange-700 p-4 md:p-6 font-inter text-gray-800">
+      <div className="max-w-4xl mx-auto bg-white p-6 md:p-8 rounded-xl shadow-2xl">
+        <h2 className="text-3xl md:text-4xl font-extrabold text-center text-gray-900 mb-6 md:mb-8">
+          แดชบอร์ดผู้ดูแลระบบ
+        </h2>
+        <p className="text-center text-gray-600 mb-4 md:mb-6 text-sm md:text-base">ยินดีต้อนรับผู้ดูแลระบบ! รหัสผู้ใช้ของคุณ: <span className="font-mono text-xs md:text-sm bg-gray-100 p-1 rounded">{userId}</span></p>
+        <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
+
+        <div className="mb-6 md:mb-8 p-4 md:p-6 bg-blue-50 rounded-lg shadow-inner">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">การตั้งค่าแพลตฟอร์ม</h3>
+          <form onSubmit={handleUpdateSettings}>
+            <div className="mb-3 md:mb-4">
+              <label className="block text-gray-700 text-sm font-bold mb-1 md:mb-2" htmlFor="serviceFee">
+                ค่าบริการ ($):
+              </label>
+              <input
+                type="number"
+                id="serviceFee"
+                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base"
+                step="0.01"
+                min="0"
+                value={serviceFee}
+                onChange={(e) => setServiceFee(parseFloat(e.target.value))}
+                required
+              />
+            </div>
+            <div className="mb-4 md:mb-6">
+              <label className="block text-gray-700 text-sm font-bold mb-1 md:mb-2" htmlFor="commissionRate">
+                อัตราคอมมิชชัน (%):
+              </label>
+              <input
+                type="number"
+                id="commissionRate"
+                className="shadow appearance-none border rounded-lg w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:ring-2 focus:ring-blue-400 text-sm md:text-base"
+                step="0.01"
+                min="0"
+                max="1"
+                value={commissionRate}
+                onChange={(e) => setCommissionRate(parseFloat(e.target.value))}
+                required
+              />
+            </div>
+            <button
+              type="submit"
+              className="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 w-full"
+            >
+              อัปเดตการตั้งค่า
+            </button>
+          </form>
+        </div>
+
+        <div className="mb-6 md:mb-8">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">การจัดการล็อกเกอร์</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {lockers.map(locker => (
+              <div key={locker.id} className="bg-gray-50 p-4 rounded-lg shadow-md">
+                <h4 className="font-semibold text-base md:text-lg">ล็อกเกอร์ {locker.id}</h4>
+                <p className="text-xs md:text-sm text-gray-600">ที่ตั้ง: {locker.location}</p>
+                <p className="text-xs md:text-sm text-gray-600 mb-2">
+                  สถานะ:{' '}
+                  <span className={`font-medium ${locker.status === 'Available' ? 'text-green-600' : 'text-red-600'}`}>
+                    {locker.status}
+                  </span>
+                </p>
+                <select
+                  className="w-full p-2 border rounded-lg text-xs md:text-sm"
+                  value={locker.status}
+                  onChange={(e) => handleLockerStatusChange(locker.id, e.target.value)}
+                >
+                  <option value="Available">พร้อมใช้งาน</option>
+                  <option value="Occupied">ไม่ว่าง</option>
+                  <option value="Maintenance">อยู่ระหว่างการบำรุงรักษา</option>
+                </select>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        <div className="p-4 md:p-6 bg-purple-50 rounded-lg shadow-inner">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">รายงานแพลตฟอร์ม</h3>
+          <div className="space-y-2 text-sm md:text-base">
+            <p>
+              <span className="font-semibold">จำนวนพัสดุที่จัดส่ง/จัดเก็บแล้วทั้งหมด:</span>{' '}
+              <span className="font-bold text-lg md:text-xl text-indigo-700">{packages.filter(p => p.status.includes('Delivered') || p.status.includes('Stored in Locker') || p.status.includes('Retrieved')).length}</span>
+            </p>
+            <p>
+              <span className="font-semibold">รายได้รวม (จากค่าธรรมเนียมล็อกเกอร์ที่ชำระแล้ว):</span>{' '}
+              <span className="font-bold text-lg md:text-xl text-green-700">${totalRevenue.toFixed(2)}</span>
+            </p>
+            <p>
+              <span className="font-semibold">รายได้แพลตฟอร์ม:</span>{' '}
+              <span className="font-bold text-lg md:text-xl text-blue-700">${platformEarnings.toFixed(2)}</span>
+            </p>
+            <p>
+              <span className="font-semibold">ยอดจ่ายให้ไรเดอร์ (โดยประมาณ):</span>{' '}
+              <span className="font-bold text-lg md:text-xl text-orange-700">${riderPayouts.toFixed(2)}</span>
+            </p>
+            <p>
+              <span className="font-semibold">อัตราการใช้งานล็อกเกอร์:</span>{' '}
+              <span className="font-bold text-lg md:text-xl text-gray-700">
+                {lockers.filter(l => l.status === 'Occupied').length} / {lockers.length}
+              </span>
+            </p>
+          </div>
+          <button
+            onClick={() => { setMessageType('info'); setMessage('กำลังสร้างรายงานโดยละเอียด (จำลอง)...'); }}
+            className="mt-4 md:mt-6 bg-gray-700 hover:bg-gray-800 text-white font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 w-full"
+          >
+            สร้างรายงานโดยละเอียด
+          </button>
+        </div>
+
+        <div className="mt-6 md:mt-8 p-4 md:p-6 bg-yellow-50 rounded-lg shadow-inner">
+          <h3 className="text-xl md:text-2xl font-bold text-gray-800 mb-3 md:mb-4">ส่วนต่อประสานการสนับสนุนลูกค้า</h3>
+          <p className="text-gray-600 mb-3 md:mb-4 text-sm md:text-base">
+            (ในแอปพลิเคชันจริง นี่จะเป็นส่วนต่อประสานเพื่อดูและตอบกลับข้อซักถามของลูกค้า
+            จัดการข้อพิพาท และให้ความช่วยเหลือ)
+          </p>
+          <button
+            onClick={() => { setMessageType('info'); setMessage('กำลังเปิดพอร์ทัลสนับสนุนลูกค้า (จำลอง)...'); }}
+            className="bg-purple-600 hover:bg-purple-700 text-white font-bold py-2 md:py-3 px-4 md:px-6 rounded-lg focus:outline-none focus:shadow-outline transition duration-300 ease-in-out transform hover:scale-105 w-full"
+          >
+            เข้าถึงพอร์ทัลสนับสนุน
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Main App Component ---
+function App() {
+  const [currentUserRole, setCurrentUserRole] = useState<string | null>(null); // 'customer', 'rider', 'admin', or null (for not logged in)
+  const [userId, setUserId] = useState<string>(''); // To simulate a unique user ID
+  const [serviceFee, setServiceFee] = useState(2.50); // Default fee, passed down to CustomerDashboard
+  const [commissionRate, setCommissionRate] = useState(0.15); // Default 15% commission, passed down to RiderDashboard
+
+  // Mock data for riders
+  const [riders, setRiders] = useState<Rider[]>([
+    { id: 'Rider A', name: 'ไรเดอร์ A' },
+    { id: 'Rider B', name: 'ไรเดอร์ B' },
+    { id: 'Rider C', name: 'ไรเดอร์ C' },
+  ]);
+
+  // Mock data for packages and lockers
+  const [packages, setPackages] = useState<Package[]>([
+    { id: 'PK001', customer: 'user_customer_sim', recipient: 'Alice', description: 'Books', status: 'Locker Reserved, Awaiting Rider Pickup', rider: 'Rider A', targetLockerId: 'L-A01', riderLockerAccessCode: null, customerRetrievalOTP: null, paid: false, lockerId: null },
+    { id: 'PK002', customer: 'user_customer_sim', recipient: 'Bob', description: 'Clothes', status: 'Paid, Ready for Rider Pickup', rider: 'Rider B', targetLockerId: 'L-A02', riderLockerAccessCode: null, customerRetrievalOTP: null, paid: true, lockerId: null },
+    { id: 'PK003', customer: 'user_customer_sim', recipient: 'Charlie', description: 'Gadget', status: 'Stored in Locker', rider: 'Rider C', targetLockerId: 'L-C01', riderLockerAccessCode: null, customerRetrievalOTP: generateOTP(), paid: true, lockerId: 'L-C01' },
+    { id: 'PK004', customer: 'user_customer_sim', recipient: 'Diana', description: 'Documents', status: 'Retrieved & Paid', rider: 'Rider A', targetLockerId: null, riderLockerAccessCode: null, customerRetrievalOTP: null, paid: true, lockerId: null },
+  ]);
+
+  const [lockers, setLockers] = useState<Locker[]>([
+    // Updated initial locker statuses to reflect mock package data
+    { id: 'L-A01', location: 'North Campus', status: 'Occupied' }, // Reserved by PK001
+    { id: 'L-A02', location: 'North Campus', status: 'Occupied' }, // En route to by PK002
+    { id: 'L-B01', location: 'South Campus', status: 'Available' },
+    { id: 'L-C01', location: 'Central Library', status: 'Occupied' }, // Occupied by PK003
+    { id: 'L-C02', location: 'Central Library', status: 'Available' },
+  ]);
+
+  useEffect(() => {
+    // Simulate initial authentication check or generate a random user ID
+    // For demonstration, we'll generate a simple ID.
+    const newUserId = 'user_' + Math.random().toString(36).substring(2, 7);
+    setUserId(newUserId);
+  }, []);
+
+  const handleLoginSuccess = (role: string) => {
+    setCurrentUserRole(role);
+    // Set a specific userId based on role for simulation purposes
+    if (role === 'customer') {
+      setUserId('user_customer_sim'); // A consistent ID for customer simulation
+    } else if (role === 'rider') {
+      // For rider, we need to pick one of the mock rider IDs
+      // Let's default to 'Rider A' for simplicity, or you can extend this to choose
+      setUserId('Rider A');
+    } else if (role === 'admin') {
+      setUserId('user_admin_sim'); // A consistent ID for admin simulation
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUserRole(null);
+    setUserId('user_' + Math.random().toString(36).substring(2, 7)); // Generate new ID on logout
+  };
+
+  const renderDashboard = () => {
+    switch (currentUserRole) {
+      case 'customer':
+        return <CustomerDashboard packages={packages} onUpdatePackage={setPackages} userId={userId} serviceFee={serviceFee} lockers={lockers} riders={riders} onUpdateLocker={setLockers} />;
+      case 'rider':
+        return <RiderDashboard packages={packages} onUpdatePackage={setPackages} lockers={lockers} userId={userId} serviceFee={serviceFee} commissionRate={commissionRate} riders={riders} />;
+      case 'admin':
+        return <AdminDashboard packages={packages} lockers={lockers} onUpdateLocker={setLockers} userId={userId} />;
+      default:
+        return <AuthScreen onLoginSuccess={handleLoginSuccess} />;
+    }
+  };
+
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 font-inter">
+      {currentUserRole && (
+        <nav className="eco-header bg-white/80 backdrop-blur-xl p-3 md:p-4 shadow-sm border-b border-green-100">
+          <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
+            <div className="flex items-center space-x-3">
+              <div className="flex items-center space-x-2">
+                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation">
+                  <span className="text-white font-bold text-lg">🌱</span>
+                </div>
+                <h1 className="eco-text-primary text-xl md:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
+                  EcoDeliver
+                </h1>
+              </div>
+              <div className="carbon-badge">
+                <span>🌍</span>
+                <span>Carbon Neutral</span>
+              </div>
+            </div>
+            <div className="flex items-center space-x-3 md:space-x-4">
+              <div className="flex items-center space-x-2">
+                <div className="eco-status"></div>
+                <span className="eco-text-secondary text-sm md:text-base capitalize">{currentUserRole} แดชบอร์ด</span>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg"
+              >
+                ออกจากระบบ
+              </button>
+            </div>
+          </div>
+        </nav>
+      )}
+      {renderDashboard()}
+    </div>
+  );
+}
+
+export default App;
