@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="th">
+  <head>
+    <meta charset="utf-8" />
+    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#22c55e" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta
+      name="description"
+      content="EcoDeliver - ระบบจัดส่งเพื่อสิ่งแวดล้อม พร้อมล็อกเกอร์อัจฉริยะ 3D"
+    />
+        <title>🌱 EcoDeliver - ระบบจัดส่งเพื่อสิ่งแวดล้อม</title>
+    
+    <!-- Custom CSS for Mobile-First Eco-Friendly Design -->
+    <style>
+      /* Eco-friendly Color Palette */
+      :root {
+        --eco-primary: #22c55e;      /* vibrant green */
+        --eco-secondary: #16a34a;     /* darker green */
+        --eco-accent: #84cc16;        /* lime green */
+        --eco-light: #dcfce7;         /* very light green */
+        --eco-dark: #15803d;          /* dark green */
+        --eco-neutral: #f8fafc;       /* almost white */
+        --eco-gray: #64748b;          /* slate gray */
+        --eco-carbon: #374151;        /* dark gray */
+      }
+      
+      /* Mobile-First Base Styles */
+      * {
+        transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        -webkit-tap-highlight-color: transparent;
+        -webkit-touch-callout: none;
+        -webkit-user-select: none;
+        -moz-user-select: none;
+        -ms-user-select: none;
+        user-select: none;
+      }
+      
+      /* Allow text selection for specific elements */
+      input, textarea, [contenteditable] {
+        -webkit-user-select: text;
+        -moz-user-select: text;
+        -ms-user-select: text;
+        user-select: text;
+      }
+      
+      /* Mobile-optimized touch targets */
+      button, a, .cursor-pointer {
+        min-height: 44px;
+        min-width: 44px;
+        touch-action: manipulation;
+      }
+      
+      /* Enhanced card design for mobile */
+      .eco-card {
+        background: linear-gradient(135deg, var(--eco-neutral) 0%, var(--eco-light) 100%);
+        border: 1px solid rgba(34, 197, 94, 0.1);
+        border-radius: 12px;
+        box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.05);
+        backdrop-filter: blur(10px);
+      }
+      
+      @media (min-width: 768px) {
+        .eco-card {
+          border-radius: 16px;
+          box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+        }
+        
+        .eco-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 25px -5px rgba(34, 197, 94, 0.1);
+          border-color: var(--eco-primary);
+        }
+      }
+      
+      /* Mobile-optimized locker design */
+      .eco-locker {
+        background: linear-gradient(145deg, #ffffff, var(--eco-light));
+        border: 2px solid var(--eco-primary);
+        border-radius: 20px;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .eco-locker::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shine 3s infinite;
+      }
+      
+      @keyframes shine {
+        0% { left: -100%; }
+        100% { left: 100%; }
+      }
+      
+      /* Available Locker Style */
+      .eco-locker-available {
+        background: linear-gradient(145deg, var(--eco-light), #ffffff);
+        border-color: var(--eco-primary);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.15);
+      }
+      
+      .eco-locker-available:hover {
+        transform: translateY(-8px) scale(1.02);
+        box-shadow: 0 25px 50px rgba(34, 197, 94, 0.25);
+        border-color: var(--eco-secondary);
+      }
+      
+      /* Occupied Locker Style */
+      .eco-locker-occupied {
+        background: linear-gradient(145deg, #fef2f2, #fee2e2);
+        border-color: #ef4444;
+        opacity: 0.7;
+        box-shadow: 0 4px 15px rgba(239, 68, 68, 0.1);
+      }
+      
+      /* Eco Button Design */
+      .eco-button {
+        background: linear-gradient(135deg, var(--eco-primary), var(--eco-secondary));
+        color: white;
+        border: none;
+        border-radius: 12px;
+        padding: 12px 24px;
+        font-weight: 600;
+        box-shadow: 0 4px 15px rgba(34, 197, 94, 0.3);
+        position: relative;
+        overflow: hidden;
+      }
+      
+      .eco-button::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+        transition: left 0.5s;
+      }
+      
+      .eco-button:hover::before {
+        left: 100%;
+      }
+      
+      .eco-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(34, 197, 94, 0.4);
+      }
+      
+      /* Carbon Neutral Badge */
+      .carbon-badge {
+        background: linear-gradient(135deg, var(--eco-dark), var(--eco-secondary));
+        color: white;
+        border-radius: 20px;
+        padding: 6px 12px;
+        font-size: 12px;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+        gap: 4px;
+      }
+      
+      /* Eco Status Indicator */
+      .eco-status {
+        width: 12px;
+        height: 12px;
+        border-radius: 50%;
+        background: var(--eco-primary);
+        box-shadow: 0 0 10px var(--eco-primary);
+        animation: pulse-eco 2s infinite;
+      }
+      
+      @keyframes pulse-eco {
+        0%, 100% { 
+          opacity: 1; 
+          transform: scale(1);
+          box-shadow: 0 0 10px var(--eco-primary);
+        }
+        50% { 
+          opacity: 0.7; 
+          transform: scale(1.1);
+          box-shadow: 0 0 20px var(--eco-primary);
+        }
+      }
+      
+      /* Minimal Header */
+      .eco-header {
+        background: linear-gradient(135deg, var(--eco-neutral), var(--eco-light));
+        border-bottom: 1px solid rgba(34, 197, 94, 0.1);
+        backdrop-filter: blur(20px);
+      }
+      
+      /* Clean Typography */
+      .eco-text-primary {
+        color: var(--eco-dark);
+        font-weight: 600;
+      }
+      
+      .eco-text-secondary {
+        color: var(--eco-gray);
+        font-weight: 400;
+      }
+      
+      /* Floating Effect */
+      .float-animation {
+        animation: float 6s ease-in-out infinite;
+      }
+      
+      @keyframes float {
+        0%, 100% { transform: translateY(0px); }
+        50% { transform: translateY(-10px); }
+      }
+      
+      /* Energy Saving Mode */
+      .energy-saving {
+        filter: brightness(0.9);
+        transition: filter 0.3s ease;
+      }
+      
+      .energy-saving:hover {
+        filter: brightness(1);
+      }
+    </style>
+  </head>
+    
+    <!-- Custom CSS for 3D Locker Effects -->
+    <style>
+      /* 3D Locker Opening Animation */
+      @keyframes lockerOpen {
+        0% { transform: perspective(500px) rotateY(0deg); }
+        50% { transform: perspective(500px) rotateY(-15deg) scale(1.05); }
+        100% { transform: perspective(500px) rotateY(0deg); }
+      }
+      
+      /* Locker Click Effect */
+      @keyframes lockerClick {
+        0% { transform: scale(1); }
+        50% { transform: scale(0.95); }
+        100% { transform: scale(1.02); }
+      }
+      
+      /* LED Pulse Animation */
+      @keyframes ledPulse {
+        0%, 100% { 
+          box-shadow: 0 0 5px currentColor, 0 0 10px currentColor; 
+          opacity: 1;
+        }
+        50% { 
+          box-shadow: 0 0 20px currentColor, 0 0 30px currentColor; 
+          opacity: 0.7;
+        }
+      }
+      
+      /* Metallic Shine Effect */
+      @keyframes metallicShine {
+        0% { background-position: -100% 0; }
+        100% { background-position: 100% 0; }
+      }
+      
+      /* Door Handle Wiggle */
+      @keyframes handleWiggle {
+        0%, 100% { transform: translateY(-50%) rotate(0deg); }
+        25% { transform: translateY(-50%) rotate(-2deg); }
+        75% { transform: translateY(-50%) rotate(2deg); }
+      }
+      
+      .locker-3d {
+        animation: lockerOpen 0.6s ease-in-out;
+      }
+      
+      .locker-3d:active {
+        animation: lockerClick 0.2s ease-in-out;
+      }
+      
+      .locker-3d:hover .locker-handle {
+        animation: handleWiggle 0.5s ease-in-out infinite;
+      }
+      
+      .status-led {
+        animation: ledPulse 2s ease-in-out infinite;
+      }
+      
+      .metallic-surface {
+        background: linear-gradient(
+          45deg,
+          transparent 30%,
+          rgba(255, 255, 255, 0.3) 50%,
+          transparent 70%
+        );
+        background-size: 200% 200%;
+        animation: metallicShine 3s ease-in-out infinite;
+      }
+      
+      /* Sound Effect Simulation with Visual Feedback */
+      .sound-feedback {
+        position: relative;
+      }
+      
+      .sound-feedback::after {
+        content: '🔊';
+        position: absolute;
+        top: -10px;
+        right: -10px;
+        opacity: 0;
+        transform: scale(0);
+        transition: all 0.3s ease;
+      }
+      
+      .sound-feedback:hover::after {
+        opacity: 1;
+        transform: scale(1);
+      }
+      
+      /* Realistic Shadow Effects */
+      .realistic-shadow {
+        box-shadow: 
+          0 4px 8px rgba(0, 0, 0, 0.2),
+          0 8px 16px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      
+      .realistic-shadow:hover {
+        box-shadow: 
+          0 8px 16px rgba(0, 0, 0, 0.3),
+          0 16px 32px rgba(0, 0, 0, 0.15),
+          inset 0 1px 0 rgba(255, 255, 255, 0.4);
+      }
+      
+      /* Sound Effect Animation */
+      @keyframes fadeOut {
+        0% { 
+          opacity: 1; 
+          transform: translate(-50%, -50%) scale(1); 
+        }
+        100% { 
+          opacity: 0; 
+          transform: translate(-50%, -50%) scale(2); 
+        }
+      }
+      
+      /* Loading Animation for Lockers */
+      @keyframes lockerBoot {
+        0% { opacity: 0; transform: translateY(20px); }
+        50% { opacity: 0.5; }
+        100% { opacity: 1; transform: translateY(0); }
+      }
+      
+      .locker-boot {
+        animation: lockerBoot 0.8s ease-out;
+      }
+      
+      /* Digital Display Flicker */
+      @keyframes displayFlicker {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.8; }
+      }
+      
+      .digital-display {
+        animation: displayFlicker 3s ease-in-out infinite;
+      }
+      
+      /* Mobile-First 3D Realistic Locker Styles */
+      .realistic-locker {
+        position: relative;
+        background: linear-gradient(145deg, #e8e8e8, #f5f5f5);
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        perspective: 1000px;
+        transform-style: preserve-3d;
+        box-shadow: 
+          0 2px 8px rgba(0, 0, 0, 0.1),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        overflow: hidden;
+        transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+      
+      /* Desktop hover effects */
+      @media (min-width: 768px) {
+        .realistic-locker {
+          border: 2px solid #d1d5db;
+          border-radius: 8px;
+          box-shadow: 
+            0 8px 16px rgba(0, 0, 0, 0.15),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8),
+            inset 0 -1px 0 rgba(0, 0, 0, 0.1);
+        }
+        
+        .realistic-locker:hover {
+          transform: translateY(-4px) rotateX(2deg);
+          box-shadow: 
+            0 12px 24px rgba(0, 0, 0, 0.2),
+            inset 0 1px 0 rgba(255, 255, 255, 0.9);
+        }
+      }
+      
+      /* Mobile touch effects */
+      @media (max-width: 767px) {
+        .realistic-locker:active {
+          transform: scale(0.98);
+          transition: transform 0.1s ease;
+        }
+      }
+      
+      .realistic-locker.available {
+        border-color: #10b981;
+        background: linear-gradient(145deg, #ecfdf5, #f0fdf4);
+      }
+      
+      .realistic-locker.occupied {
+        border-color: #ef4444;
+        background: linear-gradient(145deg, #fef2f2, #fefefe);
+      }
+      
+      /* Mobile-optimized Locker Door */
+      .locker-door {
+        position: absolute;
+        top: 4px;
+        left: 4px;
+        right: 4px;
+        bottom: 4px;
+        background: linear-gradient(135deg, #f8fafc, #e2e8f0);
+        border: 1px solid #cbd5e1;
+        border-radius: 4px;
+        box-shadow: 
+          inset 0 1px 2px rgba(0, 0, 0, 0.1),
+          inset 0 -1px 2px rgba(255, 255, 255, 0.8);
+        transform-origin: left center;
+        transition: transform 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+      }
+      
+      @media (min-width: 768px) {
+        .locker-door {
+          top: 8px;
+          left: 8px;
+          right: 8px;
+          bottom: 8px;
+          border-radius: 6px;
+          box-shadow: 
+            inset 0 2px 4px rgba(0, 0, 0, 0.1),
+            inset 0 -2px 4px rgba(255, 255, 255, 0.8);
+          transition: transform 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+        }
+      }
+      
+      .realistic-locker:active .locker-door {
+        transform: rotateY(-15deg);
+      }
+      
+      /* Mobile-optimized Digital Display */
+      .locker-display {
+        position: absolute;
+        top: 6px;
+        right: 6px;
+        width: 40px;
+        height: 16px;
+        background: #000;
+        border: 2px solid #374151;
+        border-radius: 4px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: 'Courier New', monospace;
+        font-size: 10px;
+        color: #00ff41;
+        text-shadow: 0 0 5px #00ff41;
+        box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.8);
+      }
+      
+      .locker-display.occupied {
+        color: #ff4444;
+        text-shadow: 0 0 5px #ff4444;
+      }
+      
+      /* Locker Handle */
+      .locker-handle {
+        position: absolute;
+        left: 16px;
+        top: 50%;
+        transform: translateY(-50%);
+        width: 8px;
+        height: 24px;
+        background: linear-gradient(90deg, #9ca3af, #d1d5db);
+        border-radius: 4px;
+        box-shadow: 
+          2px 0 4px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.5);
+        transition: transform 0.2s ease;
+      }
+      
+      .realistic-locker:hover .locker-handle {
+        transform: translateY(-50%) translateX(2px);
+      }
+      
+      /* Mobile-optimized Lock Mechanism */
+      .locker-lock {
+        position: absolute;
+        bottom: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 12px;
+        height: 12px;
+        background: radial-gradient(circle, #fbbf24, #f59e0b);
+        border: 1px solid #d97706;
+        border-radius: 50%;
+        box-shadow: 
+          0 1px 3px rgba(0, 0, 0, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      
+      @media (min-width: 768px) {
+        .locker-lock {
+          bottom: 12px;
+          width: 16px;
+          height: 16px;
+          border: 2px solid #d97706;
+        }
+      }
+      
+      .locker-lock::before {
+        content: '';
+        position: absolute;
+        top: 1px;
+        left: 1px;
+        width: 8px;
+        height: 8px;
+        background: radial-gradient(circle, #fde047, #facc15);
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+      }
+      
+      @media (min-width: 768px) {
+        .locker-lock::before {
+          top: 2px;
+          left: 2px;
+          width: 10px;
+          height: 10px;
+        }
+      }
+      
+      /* Mobile-optimized LED Indicators */
+      .locker-led {
+        position: absolute;
+        top: 8px;
+        left: 8px;
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        box-shadow: 
+          0 0 6px currentColor,
+          inset 0 1px 0 rgba(255, 255, 255, 0.3);
+      }
+      
+      @media (min-width: 768px) {
+        .locker-led {
+          top: 12px;
+          left: 12px;
+          width: 8px;
+          height: 8px;
+          box-shadow: 
+            0 0 10px currentColor,
+            inset 0 1px 0 rgba(255, 255, 255, 0.3);
+        }
+      }
+      
+      .realistic-locker.available .locker-led {
+        background: #10b981;
+        color: #10b981;
+      }
+      
+      .realistic-locker.occupied .locker-led {
+        background: #ef4444;
+        color: #ef4444;
+      }
+      
+      /* Mobile-optimized Package Indicator */
+      .package-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        width: 16px;
+        height: 16px;
+        background: linear-gradient(135deg, #8b5cf6, #7c3aed);
+        border: 1px solid #6d28d9;
+        border-radius: 2px;
+        box-shadow: 
+          0 2px 4px rgba(0, 0, 0, 0.2),
+          inset 0 1px 0 rgba(255, 255, 255, 0.2);
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.8);
+        transition: all 0.3s ease;
+      }
+      
+      @media (min-width: 768px) {
+        .package-indicator {
+          width: 24px;
+          height: 24px;
+          border: 2px solid #6d28d9;
+          border-radius: 3px;
+        }
+      }
+      
+      .realistic-locker.occupied .package-indicator {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+      }
+      
+      .package-indicator::before {
+        content: '📦';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 8px;
+      }
+      
+      @media (min-width: 768px) {
+        .package-indicator::before {
+          font-size: 12px;
+        }
+      }
+      
+      /* Mobile Touch Optimization */
+      @media (max-width: 767px) {
+        .realistic-locker {
+          min-height: 80px; /* Ensure adequate touch target */
+        }
+        
+        /* Remove hover effects on mobile */
+        .realistic-locker:hover {
+          transform: none;
+          box-shadow: 
+            0 2px 8px rgba(0, 0, 0, 0.1),
+            inset 0 1px 0 rgba(255, 255, 255, 0.8);
+        }
+        
+        /* Enhanced touch feedback */
+        .realistic-locker:active {
+          transform: scale(0.98);
+          transition: transform 0.1s ease;
+        }
+        
+        .realistic-locker:hover .locker-handle {
+          transform: translateY(-50%);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <noscript>You need to enable JavaScript to run this app.</noscript>
+    <div id="root"></div>
+  </body>
+</html>

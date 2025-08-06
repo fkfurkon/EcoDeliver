@@ -712,60 +712,68 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
   const customerPackages = packages.filter(pkg => pkg.customer === userId);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 p-4 md:p-6 font-inter">
-      <div className="max-w-6xl mx-auto">
-        {/* Hero Section */}
-        <div className="eco-card p-6 md:p-8 mb-6 text-center">
-          <div className="flex items-center justify-center space-x-3 mb-4">
-            <div className="w-12 h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation">
-              <span className="text-white font-bold text-2xl">🌱</span>
+    <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 font-inter">
+      <div className="w-full">
+        {/* Mobile-First Hero Section */}
+        <div className="eco-card m-2 md:m-6 p-4 md:p-8 text-center">
+          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-3 md:mb-4">
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation">
+              <span className="text-white font-bold text-xl md:text-2xl">🌱</span>
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold eco-text-primary">
+            <h2 className="text-xl md:text-3xl lg:text-4xl font-bold eco-text-primary">
               แดชบอร์ดลูกค้า
             </h2>
           </div>
-          <p className="eco-text-secondary mb-4">
+          <p className="eco-text-secondary mb-3 md:mb-4 text-sm md:text-base">
             ยินดีต้อนรับสู่ระบบจัดส่งเพื่อสิ่งแวดล้อม 
-            <span className="inline-block mx-2 px-3 py-1 bg-green-100 text-green-800 rounded-full text-sm font-semibold">
-              ID: {userId}
-            </span>
           </p>
-          <div className="flex items-center justify-center space-x-6 text-sm">
-            <div className="flex items-center space-x-2">
-              <span className="text-green-500">🌍</span>
-              <span className="eco-text-secondary">Carbon Neutral Delivery</span>
+          <div className="inline-block mb-3 md:mb-4 px-2 md:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs md:text-sm font-semibold">
+            ID: {userId}
+          </div>
+          
+          {/* Mobile-optimized eco features */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 text-xs md:text-sm">
+            <div className="flex items-center justify-center space-x-1 md:space-x-2 p-2 bg-green-50 rounded-lg">
+              <span className="text-green-500 text-sm md:text-base">🌍</span>
+              <span className="eco-text-secondary">Carbon Neutral</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-green-500">♻️</span>
-              <span className="eco-text-secondary">Eco-Friendly Packaging</span>
+            <div className="flex items-center justify-center space-x-1 md:space-x-2 p-2 bg-green-50 rounded-lg">
+              <span className="text-green-500 text-sm md:text-base">♻️</span>
+              <span className="eco-text-secondary">Eco-Friendly</span>
             </div>
-            <div className="flex items-center space-x-2">
-              <span className="text-green-500">🚲</span>
-              <span className="eco-text-secondary">Green Transportation</span>
+            <div className="flex items-center justify-center space-x-1 md:space-x-2 p-2 bg-green-50 rounded-lg">
+              <span className="text-green-500 text-sm md:text-base">🚲</span>
+              <span className="eco-text-secondary">Green Transport</span>
             </div>
           </div>
         </div>
         
-        <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
+        <div className="px-2 md:px-6">
+          <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
 
-        {/* Available Lockers Section - Minimal Eco Design */}
-        <div className="eco-card mb-6 md:mb-8 p-6 md:p-8">
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <span className="text-2xl">🏪</span>
-            <h3 className="text-xl md:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่พร้อมใช้งาน</h3>
-            <div className="carbon-badge text-xs">
+        {/* Mobile-Optimized Available Lockers Section */}
+        <div className="eco-card mb-4 md:mb-6 p-4 md:p-6">
+          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4 md:mb-6">
+            <span className="text-xl md:text-2xl">🏪</span>
+            <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่พร้อมใช้งาน</h3>
+            <div className="carbon-badge text-xs hidden md:block">
               <span>⚡</span>
               <span>Zero Emission</span>
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+          
+          {/* Mobile-friendly grid layout */}
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
             {lockers.filter(locker => locker.status === 'Available').length === 0 ? (
-              <p className="col-span-full text-center eco-text-secondary">🌱 ไม่มีล็อกเกอร์ว่างในขณะนี้</p>
+              <div className="col-span-full text-center eco-text-secondary p-4">
+                <span className="text-2xl block mb-2">🌱</span>
+                <p className="text-sm md:text-base">ไม่มีล็อกเกอร์ว่างในขณะนี้</p>
+              </div>
             ) : (
               lockers.filter(locker => locker.status === 'Available').map((locker) => (
                 <div
                   key={locker.id}
-                  className="realistic-locker available cursor-pointer h-40 md:h-48"
+                  className="realistic-locker available cursor-pointer h-24 sm:h-32 md:h-40 lg:h-48 transition-transform hover:scale-105 active:scale-95"
                   onClick={() => {
                     console.log(`🌱 Eco Locker ${locker.id} selected - *soft beep*`);
                     setSelectedLockerId(locker.id);
@@ -775,8 +783,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                   {/* LED Status Light */}
                   <div className="locker-led available"></div>
                   
-                  {/* Digital Display */}
-                  <div className="locker-display">READY</div>
+                  {/* Digital Display - responsive text */}
+                  <div className="locker-display text-xs md:text-sm">READY</div>
                   
                   {/* Locker Door */}
                   <div className="locker-door">
@@ -790,11 +798,11 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                     <div className="locker-vents"></div>
                   </div>
                   
-                  {/* Locker Number */}
-                  <div className="locker-number">{locker.id}</div>
+                  {/* Locker Number - responsive sizing */}
+                  <div className="locker-number text-xs md:text-sm lg:text-base">{locker.id}</div>
                   
-                  {/* Location Badge */}
-                  <div className="absolute top-2 left-20 bg-green-100 text-green-700 text-xs px-2 py-1 rounded-full font-semibold">
+                  {/* Location Badge - hide on very small screens */}
+                  <div className="absolute top-1 left-8 md:top-2 md:left-20 bg-green-100 text-green-700 text-xs px-1 md:px-2 py-1 rounded-full font-semibold hidden sm:block">
                     📍 {locker.location}
                   </div>
                 </div>
@@ -869,41 +877,46 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
           </div>
         </div>
 
-        {/* Package Status Section */}
-        <div className="eco-card p-6 md:p-8">
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <span className="text-2xl">📦</span>
-            <h3 className="text-xl md:text-2xl font-bold eco-text-primary">สถานะพัสดุของคุณ</h3>
-            <div className="carbon-badge text-xs">
+        {/* Mobile-Optimized Package Status Section */}
+        <div className="eco-card p-4 md:p-6">
+          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4 md:mb-6">
+            <span className="text-xl md:text-2xl">📦</span>
+            <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary">สถานะพัสดุของคุณ</h3>
+            <div className="carbon-badge text-xs hidden md:block">
               <span>🚚</span>
               <span>Green Delivery</span>
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6">
+          
+          {/* Mobile-friendly package grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
             {customerPackages.length === 0 ? (
-              <div className="col-span-full text-center py-8">
-                <div className="text-6xl mb-4">🌱</div>
-                <p className="eco-text-secondary">ไม่มีพัสดุในขณะนี้</p>
-                <p className="text-sm eco-text-secondary mt-2">เริ่มต้นการจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+              <div className="col-span-full text-center py-6 md:py-8">
+                <div className="text-4xl md:text-6xl mb-3 md:mb-4">🌱</div>
+                <p className="eco-text-secondary text-sm md:text-base">ไม่มีพัสดุในขณะนี้</p>
+                <p className="text-xs md:text-sm eco-text-secondary mt-1 md:mt-2">เริ่มต้นการจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
               </div>
             ) : (
               customerPackages.map((pkg) => (
                 <div
                   key={pkg.id}
-                  className="eco-card p-4 hover:shadow-lg transition-all duration-300 group"
+                  className="eco-card p-3 md:p-4 hover:shadow-lg transition-all duration-300 group"
                 >
-                  <div className="flex items-center justify-between mb-3">
-                    <h3 className="text-lg font-bold eco-text-primary">พัสดุ #{pkg.id}</h3>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-green-500">🌿</span>
-                      <span className="text-xs eco-text-secondary">Eco Package</span>
+                  {/* Mobile-optimized header */}
+                  <div className="flex items-center justify-between mb-2 md:mb-3">
+                    <h3 className="text-base md:text-lg font-bold eco-text-primary">พัสดุ #{pkg.id}</h3>
+                    <div className="flex items-center space-x-1 md:space-x-2">
+                      <span className="text-green-500 text-sm md:text-base">🌿</span>
+                      <span className="text-xs eco-text-secondary hidden sm:inline">Eco Package</span>
                     </div>
                   </div>
                   
-                  <div className="space-y-2 mb-4">
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold eco-text-secondary text-sm">สถานะ:</span>
-                      <span className={`text-sm font-medium px-2 py-1 rounded-full ${
+                  {/* Mobile-friendly content layout */}
+                  <div className="space-y-1 md:space-y-2 mb-3 md:mb-4">
+                    {/* Status - always visible */}
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <span className="font-semibold eco-text-secondary text-xs md:text-sm">สถานะ:</span>
+                      <span className={`text-xs md:text-sm font-medium px-2 py-1 rounded-full inline-block w-fit ${
                         pkg.status.includes('Delivered') || pkg.status.includes('Paid') || pkg.status.includes('Retrieved') 
                           ? 'bg-green-100 text-green-600' 
                           : pkg.status.includes('Locker') || pkg.status.includes('Awaiting Rider') || pkg.status.includes('En Route') 
@@ -914,33 +927,40 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                       </span>
                     </div>
                     
-                    <div className="flex items-center space-x-2">
-                      <span className="font-semibold eco-text-secondary text-sm">ไรเดอร์:</span>
-                      <span className="text-sm eco-text-primary">
+                    {/* Rider info */}
+                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                      <span className="font-semibold eco-text-secondary text-xs md:text-sm">ไรเดอร์:</span>
+                      <span className="text-xs md:text-sm eco-text-primary">
                         {riders.find(r => r.id === pkg.rider)?.name || pkg.rider || 'N/A'}
                       </span>
                     </div>
                     
+                    {/* Target locker */}
                     {pkg.targetLockerId && (
-                      <div className="flex items-center space-x-2">
-                        <span className="font-semibold eco-text-secondary text-sm">ล็อกเกอร์เป้าหมาย:</span>
-                        <span className="text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full">
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                        <span className="font-semibold eco-text-secondary text-xs md:text-sm">ล็อกเกอร์เป้าหมาย:</span>
+                        <span className="text-xs md:text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full inline-block w-fit">
                           🏪 {pkg.targetLockerId}
                         </span>
                       </div>
                     )}
                   </div>
-                {pkg.riderLockerAccessCode && pkg.status === 'Picked Up, En Route to Locker' && (
-                  <p className="text-xs md:text-sm text-gray-600 mb-1 text-red-500">
-                    <span className="font-semibold">รหัสเข้าถึงล็อกเกอร์ไรเดอร์:</span> {pkg.riderLockerAccessCode} (สำหรับไรเดอร์)
-                  </p>
-                )}
-                <div className="mt-3 md:mt-4 space-y-2">
-                  {/* Only show "Request Locker Storage" if it's an "Out for Delivery" package that needs redirection */}
+                  
+                  {/* Rider access code - mobile responsive */}
+                  {pkg.riderLockerAccessCode && pkg.status === 'Picked Up, En Route to Locker' && (
+                    <div className="text-xs md:text-sm text-red-600 mb-2 md:mb-3 p-2 bg-red-50 rounded-lg">
+                      <span className="font-semibold block mb-1">รหัสเข้าถึงล็อกเกอร์ไรเดอร์:</span> 
+                      <span className="font-mono bg-red-100 px-2 py-1 rounded">{pkg.riderLockerAccessCode}</span>
+                      <span className="block text-xs mt-1">(สำหรับไรเดอร์)</span>
+                    </div>
+                  )}
+                  
+                  {/* Mobile-optimized action buttons */}
+                  <div className="mt-2 md:mt-4 space-y-2">
                   {pkg.status === 'Out for Delivery' && (
                     <button
                       onClick={() => handleRequestLocker(pkg.id)}
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105"
+                      className="w-full bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
                     >
                       ร้องขอจัดเก็บในล็อกเกอร์ (เปลี่ยนเส้นทาง)
                     </button>
@@ -949,13 +969,13 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                     <>
                       <button
                         onClick={() => handleReceiveOTP(pkg.id)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105"
+                        className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
                       >
                         🔑 รับ OTP ล็อกเกอร์
                       </button>
                       <button
                         onClick={() => handleConfirmPackageReceipt(pkg.id)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2 px-4 rounded-lg text-xs md:text-sm transition duration-300 ease-in-out transform hover:scale-105"
+                        className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
                       >
                         ✅ ยืนยันรับพัสดุแล้ว
                       </button>
@@ -976,41 +996,41 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
         />
       )}
       {showBookLockerModal && (
-        <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-          <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
-            <div className="text-center mb-6">
-              <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
-                <span className="text-white font-bold text-2xl">🌱</span>
+        <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 z-50 overflow-y-auto">
+          <div className="eco-card p-4 md:p-6 w-full max-w-sm md:max-w-md mx-2 my-4 max-h-screen overflow-y-auto">
+            <div className="text-center mb-4 md:mb-6">
+              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 float-animation">
+                <span className="text-white font-bold text-xl md:text-2xl">🌱</span>
               </div>
-              <h3 className="text-xl md:text-2xl font-bold eco-text-primary mb-2">จองล็อกเกอร์ Eco-Friendly</h3>
-              <p className="eco-text-secondary text-sm">การจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+              <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary mb-2">จองล็อกเกอร์ Eco-Friendly</h3>
+              <p className="eco-text-secondary text-xs md:text-sm">การจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
             </div>
             
-            {/* Display selected locker info */}
+            {/* Mobile-optimized selected locker info */}
             {selectedLockerId && (
-              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                <div className="flex items-center space-x-2 mb-3">
-                  <span className="text-green-500">🏪</span>
-                  <h4 className="font-semibold eco-text-primary">ล็อกเกอร์ที่เลือก</h4>
+              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-2 mb-2 md:mb-3">
+                  <span className="text-green-500 text-sm md:text-base">🏪</span>
+                  <h4 className="font-semibold eco-text-primary text-sm md:text-base">ล็อกเกอร์ที่เลือก</h4>
                 </div>
-                <div className="space-y-2">
+                <div className="space-y-1 md:space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm eco-text-secondary">รหัส:</span>
-                    <span className="text-sm font-medium eco-text-primary bg-green-100 px-2 py-1 rounded-full">
+                    <span className="text-xs md:text-sm eco-text-secondary">รหัส:</span>
+                    <span className="text-xs md:text-sm font-medium eco-text-primary bg-green-100 px-2 py-1 rounded-full">
                       {selectedLockerId}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm eco-text-secondary">ที่ตั้ง:</span>
-                    <span className="text-sm eco-text-primary">
+                    <span className="text-xs md:text-sm eco-text-secondary">ที่ตั้ง:</span>
+                    <span className="text-xs md:text-sm eco-text-primary">
                       📍 {lockers.find(l => l.id === selectedLockerId)?.location}
                     </span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm eco-text-secondary">สถานะ:</span>
+                    <span className="text-xs md:text-sm eco-text-secondary">สถานะ:</span>
                     <div className="flex items-center space-x-1">
                       <div className="eco-status w-2 h-2"></div>
-                      <span className="text-sm text-green-600 font-medium">ว่าง</span>
+                      <span className="text-xs md:text-sm text-green-600 font-medium">ว่าง</span>
                     </div>
                   </div>
                 </div>
@@ -1018,14 +1038,14 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
             )}
 
             <form onSubmit={handleBookLocker}>
-              <div className="mb-4">
-                <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="recipientName">
+              <div className="mb-3 md:mb-4">
+                <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="recipientName">
                   ชื่อผู้รับ (ถ้าแตกต่างจากคุณ):
                 </label>
                 <input
                   type="text"
                   id="recipientName"
-                  className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                  className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
                   placeholder="เช่น สมชาย"
                   value={recipientName}
                   onChange={(e) => setRecipientName(e.target.value)}
@@ -1048,13 +1068,13 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
               
               {/* Show locker selection only if no locker is pre-selected */}
               {!selectedLockerId && (
-                <div className="mb-4">
-                  <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="lockerSelect">
+                <div className="mb-3 md:mb-4">
+                  <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="lockerSelect">
                     เลือกล็อกเกอร์สำหรับจัดเก็บ:
                   </label>
                   <select
                     id="lockerSelect"
-                    className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                    className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
                     value={selectedLockerId}
                     onChange={(e) => setSelectedLockerId(e.target.value)}
                     required
@@ -1069,13 +1089,13 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                 </div>
               )}
               
-              <div className="mb-6">
-                <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="riderSelect">
+              <div className="mb-4 md:mb-6">
+                <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="riderSelect">
                   เลือกไรเดอร์:
                 </label>
                 <select
                   id="riderSelect"
-                  className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                  className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
                   value={selectedRiderId}
                   onChange={(e) => setSelectedRiderId(e.target.value)}
                   required
@@ -1089,28 +1109,29 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                 </select>
               </div>
               
-              {/* Eco-friendly message */}
-              <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                <div className="flex items-center space-x-2 mb-2">
-                  <span className="text-green-500">🌍</span>
-                  <span className="text-sm font-semibold eco-text-primary">การจัดส่งเพื่อสิ่งแวดล้อม</span>
+              {/* Mobile-optimized eco-friendly message */}
+              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                <div className="flex items-center space-x-1 md:space-x-2 mb-1 md:mb-2">
+                  <span className="text-green-500 text-sm md:text-base">🌍</span>
+                  <span className="text-xs md:text-sm font-semibold eco-text-primary">การจัดส่งเพื่อสิ่งแวดล้อม</span>
                 </div>
                 <p className="text-xs eco-text-secondary">
                   การจัดส่งแต่ละครั้งช่วยลดการปล่อยคาร์บอน และใช้บรรจุภัณฑ์ที่เป็นมิตรกับสิ่งแวดล้อม
                 </p>
               </div>
               
-              <div className="flex flex-col md:flex-row justify-end space-y-3 md:space-y-0 md:space-x-4">
+              {/* Mobile-optimized action buttons */}
+              <div className="flex flex-col space-y-2 md:flex-row md:justify-end md:space-y-0 md:space-x-3">
                 <button
                   type="button"
                   onClick={handleCloseBookLockerModal}
-                  className="bg-gray-200 hover:bg-gray-300 eco-text-primary font-semibold py-3 px-6 rounded-lg text-sm md:text-base transition-all duration-300 w-full md:w-auto border border-gray-300"
+                  className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 eco-text-primary font-semibold py-3 px-4 rounded-lg text-sm transition-all duration-200 w-full md:w-auto border border-gray-300 touch-manipulation"
                 >
                   ยกเลิก
                 </button>
                 <button
                   type="submit"
-                  className="eco-button font-semibold py-3 px-6 rounded-lg text-sm md:text-base w-full md:w-auto flex items-center justify-center space-x-2"
+                  className="eco-button font-semibold py-3 px-4 rounded-lg text-sm w-full md:w-auto flex items-center justify-center space-x-2 touch-manipulation active:scale-95 transition-transform duration-200"
                 >
                   <span>🌱</span>
                   <span>จองล็อกเกอร์</span>
@@ -1134,6 +1155,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
           onClose={() => setShowConfirmReceiptModal(false)}
         />
       )}
+        </div>
       </div>
     </div>
   );
