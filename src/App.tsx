@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { StoreIcon, Unlock, Box, Pin } from './component/IconLibrary';
 
 // Type definitions
 interface Package {
@@ -93,9 +94,9 @@ const generateOTP = () => {
 
 // Loading spinner component
 const LoadingSpinner = () => (
-  <div className="flex justify-center items-center py-4">
-    <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-white"></div>
-    <p className="ml-3 text-white">กำลังโหลด...</p>
+  <div className="flex justify-center items-center space-x-3 py-4">
+    <div className="animate-spin rounded-full h-8 w-8 border-4 border-green-400 border-t-transparent"></div>
+    <p className="text-green-400 font-semibold select-none">กำลังโหลด...</p>
   </div>
 );
 
@@ -152,10 +153,10 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ packageId, serviceFee, onCo
               src={`https://placehold.co/180x180/E0E7FF/4F46E5?text=QR+Code+for+%24${serviceFee.toFixed(2)}`}
               alt="QR Code"
               className="w-36 h-36 md:w-48 md:h-48 mx-auto rounded-lg shadow-md"
-              onError={(e: React.SyntheticEvent<HTMLImageElement>) => { 
+              onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
                 const target = e.target as HTMLImageElement;
-                target.onerror = null; 
-                target.src = "https://placehold.co/180x180?text=QR+Code"; 
+                target.onerror = null;
+                target.src = "https://placehold.co/180x180?text=QR+Code";
               }}
             />
             <p className="text-xs md:text-sm text-gray-500 mt-2">สแกนรหัส QR เพื่อชำระเงิน</p>
@@ -206,7 +207,7 @@ const OTPDisplayModal: React.FC<OTPDisplayModalProps> = ({ packageId, otp, onClo
           <h3 className="text-xl md:text-2xl font-bold eco-text-primary mb-2">รหัส OTP ของคุณ</h3>
           <p className="eco-text-secondary text-sm">สำหรับพัสดุ #{packageId}</p>
         </div>
-        
+
         {/* OTP Display */}
         <div className="mb-6 p-6 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border-2 border-green-200 text-center">
           <p className="eco-text-secondary text-sm mb-3">รหัส OTP เพื่อเปิดล็อกเกอร์:</p>
@@ -266,12 +267,12 @@ const PackageReceiptConfirmationModal: React.FC<PackageReceiptConfirmationModalP
       <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
         <div className="text-center mb-6">
           <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
-            <span className="text-white font-bold text-2xl">📦</span>
+            <Box className="text-xl text-white" />
           </div>
           <h3 className="text-xl md:text-2xl font-bold eco-text-primary mb-2">ยืนยันการรับพัสดุ</h3>
           <p className="eco-text-secondary text-sm">คุณได้รับพัสดุจากล็อกเกอร์แล้วใช่หรือไม่?</p>
         </div>
-        
+
         {/* Package Details */}
         <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
           <div className="space-y-3">
@@ -282,7 +283,7 @@ const PackageReceiptConfirmationModal: React.FC<PackageReceiptConfirmationModalP
             <div className="flex items-center justify-between">
               <span className="text-sm eco-text-secondary font-semibold">ล็อกเกอร์:</span>
               <span className="text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full">
-                🏪 {pkg.lockerId || pkg.targetLockerId}
+                {pkg.lockerId || pkg.targetLockerId}
               </span>
             </div>
             <div className="flex items-center justify-between">
@@ -324,7 +325,6 @@ const PackageReceiptConfirmationModal: React.FC<PackageReceiptConfirmationModalP
               <LoadingSpinner />
             ) : (
               <>
-                <span>✅</span>
                 <span>ยืนยันการรับพัสดุ</span>
               </>
             )}
@@ -364,19 +364,39 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
     <div className="min-h-screen bg-gradient-to-br from-green-50 via-emerald-50 to-teal-50 flex items-center justify-center p-4">
       <div className="eco-card p-6 md:p-8 w-full max-w-sm md:max-w-md">
         <div className="text-center mb-6">
-          <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-4 float-animation">
-            <span className="text-white font-bold text-3xl">🌱</span>
+          <div className="flex items-center justify-end py-5">
+            <button
+              type="button"
+              onClick={() => handleLogin('admin')}
+              className="bg-white border border-gray-300 text-gray-700 font-medium py-2 px-4 rounded-md text-sm hover:bg-gray-100 disabled:opacity-50 transition duration-200"
+              disabled={loading}
+            >
+              {loading ? <LoadingSpinner /> : (
+                <>
+                  <span>สำหรับแอดมิน</span>
+                </>
+              )}
+            </button>
           </div>
+          <div className="flex justify-center items-center">
+            <div className="w-20 h-20 md:w-20 md:h-20 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation overflow-hidden">
+              <img
+                src="/Image/EcoDeliver.jpg"
+                alt="plant-icon"
+                className="w-25 h-25 object-contain"
+              />
+            </div>
+          </div>
+
           <h2 className="text-2xl md:text-3xl font-bold eco-text-primary mb-2">
             EcoDeliver
           </h2>
           <p className="eco-text-secondary text-sm">ระบบจัดส่งเพื่อสิ่งแวดล้อม</p>
           <div className="carbon-badge mt-3">
-            <span>🌍</span>
             <span>Carbon Neutral Platform</span>
           </div>
         </div>
-        
+
         <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
         <form onSubmit={(e) => e.preventDefault()}> {/* Prevent default form submission */}
           <div className="mb-4">
@@ -405,7 +425,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
               onChange={(e) => setPassword(e.target.value)}
             />
           </div>
-          
+
           {/* Eco Stats */}
           <div className="mb-6 p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
             <div className="text-center">
@@ -425,7 +445,7 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
               </div>
             </div>
           </div>
-          
+
           <div className="flex flex-col space-y-3">
             <button
               type="button"
@@ -435,7 +455,6 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             >
               {loading ? <LoadingSpinner /> : (
                 <>
-                  <span>👤</span>
                   <span>เข้าสู่ระบบในฐานะลูกค้า</span>
                 </>
               )}
@@ -443,36 +462,22 @@ const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
             <button
               type="button"
               onClick={() => handleLogin('rider')}
-              className="bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-semibold py-3 px-6 rounded-lg text-base focus:outline-none transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center space-x-2"
+              className="bg-gradient-to-r from-green-700 to-green-800 hover:from-green-900 hover:to-green-950 text-white font-semibold py-3 px-6 rounded-lg text-base focus:outline-none transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center space-x-2"
               disabled={loading}
             >
               {loading ? <LoadingSpinner /> : (
                 <>
-                  <span>🚲</span>
                   <span>เข้าสู่ระบบในฐานะไรเดอร์</span>
-                </>
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => handleLogin('admin')}
-              className="bg-gradient-to-r from-purple-500 to-pink-500 hover:from-purple-600 hover:to-pink-600 text-white font-semibold py-3 px-6 rounded-lg text-base focus:outline-none transition-all duration-300 transform hover:scale-105 w-full flex items-center justify-center space-x-2"
-              disabled={loading}
-            >
-              {loading ? <LoadingSpinner /> : (
-                <>
-                  <span>⚙️</span>
-                  <span>เข้าสู่ระบบในฐานะผู้ดูแลระบบ</span>
                 </>
               )}
             </button>
           </div>
         </form>
-        
+
         {/* Footer */}
         <div className="mt-6 text-center">
           <p className="text-xs eco-text-secondary">
-            🌱 ร่วมกันสร้างอนาคตที่ยั่งยืน 🌱
+            ร่วมกันสร้างอนาคตที่ยั่งยืน
           </p>
         </div>
       </div>
@@ -505,35 +510,35 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
   // Check for new packages stored in locker and notify customer
   React.useEffect(() => {
     const customerPackages = packages.filter(pkg => pkg.customer === userId);
-    const newStoredPackages = customerPackages.filter(pkg => 
-      pkg.status === 'Stored in Locker' && 
-      pkg.customerRetrievalOTP && 
+    const newStoredPackages = customerPackages.filter(pkg =>
+      pkg.status === 'Stored in Locker' &&
+      pkg.customerRetrievalOTP &&
       !notifications.includes(pkg.id)
     );
-    
+
     if (newStoredPackages.length > 0) {
       const newNotifications = newStoredPackages.map(pkg => pkg.id);
       setNotifications(prev => [...prev, ...newNotifications]);
-      
+
       // Show notification message
       if (newStoredPackages.length === 1) {
         const pkg = newStoredPackages[0];
         setMessageType('success');
         if (pkg.paid) {
-          setMessage(`🎉 ดีใจด้วย! พัสดุ #${pkg.id} ของคุณถูกจัดเก็บในล็อกเกอร์ ${pkg.lockerId} แล้ว! 
-📱 คุณสามารถรับ OTP และไปรับพัสดุได้เลย 
-✅ ไม่ต้องชำระเงินเพิ่ม (ชำระแล้วตอนจอง)
-🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
+          setMessage(`ดีใจด้วย! พัสดุ #${pkg.id} ของคุณถูกจัดเก็บในล็อกเกอร์ ${pkg.lockerId} แล้ว! 
+คุณสามารถรับ OTP และไปรับพัสดุได้เลย 
+ไม่ต้องชำระเงินเพิ่ม (ชำระแล้วตอนจอง)
+ขอบคุณที่ใช้บริการ EcoDeliver`);
         } else {
-          setMessage(`🎉 ดีใจด้วย! พัสดุ #${pkg.id} ของคุณถูกจัดเก็บในล็อกเกอร์ ${pkg.lockerId} แล้ว! 
-📱 คุณสามารถรับ OTP และไปรับพัสดุได้เลย 
-💳 จะต้องชำระค่าบริการล็อกเกอร์ก่อนรับพัสดุ
-🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
+          setMessage(`ดีใจด้วย! พัสดุ #${pkg.id} ของคุณถูกจัดเก็บในล็อกเกอร์ ${pkg.lockerId} แล้ว! 
+คุณสามารถรับ OTP และไปรับพัสดุได้เลย 
+จะต้องชำระค่าบริการล็อกเกอร์ก่อนรับพัสดุ
+ขอบคุณที่ใช้บริการ EcoDeliver`);
         }
       } else {
         setMessageType('success');
-        setMessage(`🎉 ดีใจด้วย! มีพัสดุ ${newStoredPackages.length} ชิ้นของคุณถูกจัดเก็บในล็อกเกอร์แล้ว! 
-📱 คุณสามารถรับ OTP และไปรับพัสดุได้เลย`);
+        setMessage(`ดีใจด้วย! มีพัสดุ ${newStoredPackages.length} ชิ้นของคุณถูกจัดเก็บในล็อกเกอร์แล้ว! 
+คุณสามารถรับ OTP และไปรับพัสดุได้เลย`);
       }
     }
   }, [packages, userId, notifications]);
@@ -576,7 +581,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
     setMessageType('success');
     setMessage(`จองล็อกเกอร์ ${selectedLockerId} และมอบหมายให้ ${riders.find(r => r.id === selectedRiderId)?.name} สำหรับพัสดุ ${newPackageId} แล้ว`);
     handleCloseBookLockerModal();
-    
+
     // Open payment modal immediately after booking
     setPackageToPay(newPackageId);
     setShowPaymentModal(true);
@@ -629,18 +634,18 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
 
     // Update package status to retrieved
     const updatedPackages = packages.map(p =>
-      p.id === packageId ? { 
-        ...p, 
-        status: 'Package Retrieved', 
+      p.id === packageId ? {
+        ...p,
+        status: 'Package Retrieved',
         customerRetrievalOTP: null,
-        lockerId: null 
+        lockerId: null
       } : p
     );
     onUpdatePackage(updatedPackages);
 
     // Free the locker - change status to Available
     if (lockerId) {
-      const updatedLockers = lockers.map(l => 
+      const updatedLockers = lockers.map(l =>
         l.id === lockerId ? { ...l, status: 'Available' } : l
       );
       onUpdateLocker(updatedLockers);
@@ -650,7 +655,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
     setMessage(`🎉 ยืนยันการรับพัสดุ #${packageId} เรียบร้อยแล้ว! 
 ✅ ล็อกเกอร์ ${lockerId} ได้ถูกปลดล็อกและพร้อมใช้งาน 
 🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
-    
+
     setShowConfirmReceiptModal(false);
     setPackageToConfirmReceipt(null);
   };
@@ -665,12 +670,12 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
 
   const handleConfirmPayment = (packageId: string) => {
     const packageToUpdate = packages.find(p => p.id === packageId);
-    
+
     if (!packageToUpdate) return;
-    
+
     let newStatus = '';
     let shouldFreeLocker = false;
-    
+
     // Determine new status based on current status
     if (packageToUpdate.status === 'Locker Reserved, Awaiting Rider Pickup') {
       // Payment after booking locker - ready for rider pickup
@@ -684,7 +689,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
       newStatus = 'Retrieved & Paid';
       shouldFreeLocker = true;
     }
-    
+
     const updatedPackages = packages.map(p =>
       p.id === packageId ? { ...p, paid: true, status: newStatus } : p
     );
@@ -717,24 +722,27 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
         {/* Mobile-First Hero Section */}
         <div className="eco-card m-2 md:m-6 p-4 md:p-8 text-center">
           <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-3 md:mb-4">
-            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation">
-              <span className="text-white font-bold text-xl md:text-2xl">🌱</span>
+            <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation overflow-hidden">
+              <img
+                src="/Image/EcoDeliver.jpg"
+                alt="plant icon"
+                className="w-20 h-20 md:w-20 md:h-20 object-contain"
+              />
             </div>
             <h2 className="text-xl md:text-3xl lg:text-4xl font-bold eco-text-primary">
               แดชบอร์ดลูกค้า
             </h2>
           </div>
           <p className="eco-text-secondary mb-3 md:mb-4 text-sm md:text-base">
-            ยินดีต้อนรับสู่ระบบจัดส่งเพื่อสิ่งแวดล้อม 
+            ยินดีต้อนรับสู่ระบบจัดส่งเพื่อสิ่งแวดล้อม
           </p>
           <div className="inline-block mb-3 md:mb-4 px-2 md:px-3 py-1 bg-green-100 text-green-800 rounded-full text-xs md:text-sm font-semibold">
             ID: {userId}
           </div>
-          
+
           {/* Mobile-optimized eco features */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-2 md:gap-4 text-xs md:text-sm">
             <div className="flex items-center justify-center space-x-1 md:space-x-2 p-2 bg-green-50 rounded-lg">
-              <span className="text-green-500 text-sm md:text-base">🌍</span>
               <span className="eco-text-secondary">Carbon Neutral</span>
             </div>
             <div className="flex items-center justify-center space-x-1 md:space-x-2 p-2 bg-green-50 rounded-lg">
@@ -742,419 +750,422 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
               <span className="eco-text-secondary">Eco-Friendly</span>
             </div>
             <div className="flex items-center justify-center space-x-1 md:space-x-2 p-2 bg-green-50 rounded-lg">
-              <span className="text-green-500 text-sm md:text-base">🚲</span>
               <span className="eco-text-secondary">Green Transport</span>
             </div>
           </div>
         </div>
-        
+
         <div className="px-2 md:px-6">
           <MessageBox message={message} type={messageType} onClose={() => setMessage('')} />
 
-        {/* Mobile-Optimized Available Lockers Section */}
-        <div className="eco-card mb-4 md:mb-6 p-4 md:p-6">
-          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4 md:mb-6">
-            <span className="text-xl md:text-2xl">🏪</span>
-            <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่พร้อมใช้งาน</h3>
-            <div className="carbon-badge text-xs hidden md:block">
-              <span>⚡</span>
-              <span>Zero Emission</span>
-            </div>
-          </div>
-          
-          {/* Mobile-friendly grid layout */}
-          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
-            {lockers.filter(locker => locker.status === 'Available').length === 0 ? (
-              <div className="col-span-full text-center eco-text-secondary p-4">
-                <span className="text-2xl block mb-2">🌱</span>
-                <p className="text-sm md:text-base">ไม่มีล็อกเกอร์ว่างในขณะนี้</p>
+          {/* Mobile-Optimized Available Lockers Section */}
+          <div className="eco-card mb-4 md:mb-6 p-4 md:p-6">
+            <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4 md:mb-6">
+              <StoreIcon className="text-xl md:text-2xl text-green-700" />
+              <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่พร้อมใช้งาน</h3>
+              <div className="carbon-badge text-xs hidden md:block">
+                <span>Zero Emission</span>
               </div>
-            ) : (
-              lockers.filter(locker => locker.status === 'Available').map((locker) => (
-                <div
-                  key={locker.id}
-                  className="realistic-locker available cursor-pointer h-24 sm:h-32 md:h-40 lg:h-48 transition-transform hover:scale-105 active:scale-95"
-                  onClick={() => {
-                    console.log(`🌱 Eco Locker ${locker.id} selected - *soft beep*`);
-                    setSelectedLockerId(locker.id);
-                    setShowBookLockerModal(true);
-                  }}
-                >
-                  {/* LED Status Light */}
-                  <div className="locker-led available"></div>
-                  
-                  {/* Digital Display - responsive text */}
-                  <div className="locker-display text-xs md:text-sm">READY</div>
-                  
-                  {/* Locker Door */}
-                  <div className="locker-door">
-                    {/* Handle */}
-                    <div className="locker-handle"></div>
-                    
-                    {/* Lock Mechanism */}
-                    <div className="locker-lock"></div>
-                    
-                    {/* Ventilation */}
-                    <div className="locker-vents"></div>
-                  </div>
-                  
-                  {/* Locker Number - responsive sizing */}
-                  <div className="locker-number text-xs md:text-sm lg:text-base">{locker.id}</div>
-                  
-                  {/* Location Badge - hide on very small screens */}
-                  <div className="absolute top-1 left-8 md:top-2 md:left-20 bg-green-100 text-green-700 text-xs px-1 md:px-2 py-1 rounded-full font-semibold hidden sm:block">
-                    📍 {locker.location}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
+            </div>
 
-        {/* Occupied Lockers Section - Minimal Eco Design */}
-        <div className="eco-card mb-6 md:mb-8 p-6 md:p-8">
-          <div className="flex items-center justify-center space-x-3 mb-6">
-            <span className="text-2xl">🔒</span>
-            <h3 className="text-xl md:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่ใช้งานอยู่</h3>
-            <div className="bg-orange-100 text-orange-700 text-xs px-3 py-1 rounded-full font-semibold">
-              <span>📦</span>
-              <span>In Use</span>
+            {/* Mobile-friendly grid layout */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
+              {lockers.filter(locker => locker.status === 'Available').length === 0 ? (
+                <div className="col-span-full text-center eco-text-secondary p-4">
+                  <span className="text-2xl block mb-2">🌱</span>
+                  <p className="text-sm md:text-base">ไม่มีล็อกเกอร์ว่างในขณะนี้</p>
+                </div>
+              ) : (
+                lockers.filter(locker => locker.status === 'Available').map((locker) => (
+                  <div
+                    key={locker.id}
+                    className="realistic-locker available cursor-pointer h-24 sm:h-32 md:h-40 lg:h-48 transition-transform hover:scale-105 active:scale-95"
+                    onClick={() => {
+                      console.log(`🌱 Eco Locker ${locker.id} selected - *soft beep*`);
+                      setSelectedLockerId(locker.id);
+                      setShowBookLockerModal(true);
+                    }}
+                  >
+                    {/* LED Status Light */}
+                    <div className="locker-led available"></div>
+
+                    {/* Digital Display - responsive text */}
+                    <div className="locker-display text-xs md:text-sm">READY</div>
+
+                    {/* Locker Door */}
+                    <div className="locker-door">
+                      {/* Handle */}
+                      <div className="locker-handle"></div>
+
+                      {/* Lock Mechanism */}
+                      <div className="locker-lock"></div>
+
+                      {/* Ventilation */}
+                      <div className="locker-vents"></div>
+                    </div>
+
+                    {/* Locker Number - responsive sizing */}
+                    <div className="locker-number text-xs md:text-sm lg:text-base">{locker.id}</div>
+
+                    {/* Location Badge - hide on very small screens */}
+                    <div className="absolute top-1 md:top-2 left-1/2 transform -translate-x-1/2 
+                bg-green-100 text-green-700 text-xs px-2 py-1 
+                rounded-full font-semibold hidden sm:flex items-center gap-1">
+                      <Pin className="text-sm md:text-base text-green-700" />
+                      {locker.location}
+                    </div>
+
+                  </div>
+                ))
+              )}
             </div>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
-            {lockers.filter(locker => locker.status === 'Occupied').length === 0 ? (
-              <p className="col-span-full text-center eco-text-secondary">🌱 ไม่มีล็อกเกอร์ที่ถูกใช้งานในขณะนี้</p>
-            ) : (
-              lockers.filter(locker => locker.status === 'Occupied').map((locker) => (
-                <div
-                  key={locker.id}
-                  className="realistic-locker occupied cursor-not-allowed h-40 md:h-48"
-                >
-                  {/* LED Status Light */}
-                  <div className="locker-led occupied"></div>
-                  
-                  {/* Digital Display */}
-                  <div className="locker-display occupied">BUSY</div>
-                  
-                  {/* Locker Door */}
-                  <div className="locker-door">
-                    {/* Handle */}
-                    <div className="locker-handle"></div>
-                    
-                    {/* Lock Mechanism */}
-                    <div className="locker-lock"></div>
-                    
-                    {/* Ventilation */}
-                    <div className="locker-vents"></div>
-                    
-                    {/* Package Indicator */}
-                    <div className="package-indicator">📦</div>
-                  </div>
-                  
-                  {/* Keypad */}
-                  <div className="locker-keypad">
-                    <div className="keypad-button">1</div>
-                    <div className="keypad-button">2</div>
-                    <div className="keypad-button">3</div>
-                    <div className="keypad-button">4</div>
-                    <div className="keypad-button">5</div>
-                    <div className="keypad-button">6</div>
-                    <div className="keypad-button">7</div>
-                    <div className="keypad-button">8</div>
-                    <div className="keypad-button">9</div>
-                  </div>
-                  
-                  {/* Locker Number */}
-                  <div className="locker-number">{locker.id}</div>
-                  
-                  {/* Location Badge */}
-                  <div className="absolute top-2 left-20 bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold">
-                    📍 {locker.location}
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        </div>
 
-        {/* Mobile-Optimized Package Status Section */}
-        <div className="eco-card p-4 md:p-6">
-          <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4 md:mb-6">
-            <span className="text-xl md:text-2xl">📦</span>
-            <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary">สถานะพัสดุของคุณ</h3>
-            <div className="carbon-badge text-xs hidden md:block">
-              <span>🚚</span>
-              <span>Green Delivery</span>
-            </div>
-          </div>
-          
-          {/* Mobile-friendly package grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
-            {customerPackages.length === 0 ? (
-              <div className="col-span-full text-center py-6 md:py-8">
-                <div className="text-4xl md:text-6xl mb-3 md:mb-4">🌱</div>
-                <p className="eco-text-secondary text-sm md:text-base">ไม่มีพัสดุในขณะนี้</p>
-                <p className="text-xs md:text-sm eco-text-secondary mt-1 md:mt-2">เริ่มต้นการจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+          {/* Occupied Lockers Section - Minimal Eco Design */}
+          <div className="eco-card mb-6 md:mb-8 p-6 md:p-8">
+            <div className="flex items-center justify-center space-x-3 mb-6">
+              <Unlock className="text-xl text-orange-700" />
+              <h3 className="text-orange-700 text-xl md:text-2xl font-bold eco-text-primary">ล็อกเกอร์ที่ใช้งานอยู่</h3>
+              <div className="bg-orange-100 text-orange-700 text-xs px-3 py-1 rounded-full font-semibold">
+                <span>In Use</span>
               </div>
-            ) : (
-              customerPackages.map((pkg) => (
-                <div
-                  key={pkg.id}
-                  className="eco-card p-3 md:p-4 hover:shadow-lg transition-all duration-300 group"
-                >
-                  {/* Mobile-optimized header */}
-                  <div className="flex items-center justify-between mb-2 md:mb-3">
-                    <h3 className="text-base md:text-lg font-bold eco-text-primary">พัสดุ #{pkg.id}</h3>
-                    <div className="flex items-center space-x-1 md:space-x-2">
-                      <span className="text-green-500 text-sm md:text-base">🌿</span>
-                      <span className="text-xs eco-text-secondary hidden sm:inline">Eco Package</span>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+              {lockers.filter(locker => locker.status === 'Occupied').length === 0 ? (
+                <p className="col-span-full text-center eco-text-secondary">🌱 ไม่มีล็อกเกอร์ที่ถูกใช้งานในขณะนี้</p>
+              ) : (
+                lockers.filter(locker => locker.status === 'Occupied').map((locker) => (
+                  <div
+                    key={locker.id}
+                    className="realistic-locker occupied cursor-not-allowed h-40 md:h-48"
+                  >
+                    {/* LED Status Light */}
+                    <div className="locker-led occupied"></div>
+
+                    {/* Digital Display */}
+                    <div className="locker-display occupied">BUSY</div>
+
+                    {/* Locker Door */}
+                    <div className="locker-door">
+                      {/* Handle */}
+                      <div className="locker-handle"></div>
+
+                      {/* Lock Mechanism */}
+                      <div className="locker-lock"></div>
+
+                      {/* Ventilation */}
+                      <div className="locker-vents"></div>
+
+                      {/* Package Indicator */}
+                      <div className="package-indicator">
+                        <Box className="text-4xl md:text-6xl mb-3 md:mb-4 text-yellow-400" />
+                      </div>
+                    </div>
+
+                    {/* Keypad */}
+                    <div className="locker-keypad">
+                      <div className="keypad-button">1</div>
+                      <div className="keypad-button">2</div>
+                      <div className="keypad-button">3</div>
+                      <div className="keypad-button">4</div>
+                      <div className="keypad-button">5</div>
+                      <div className="keypad-button">6</div>
+                      <div className="keypad-button">7</div>
+                      <div className="keypad-button">8</div>
+                      <div className="keypad-button">9</div>
+                    </div>
+
+                    {/* Locker Number */}
+                    <div className="locker-number">{locker.id}</div>
+
+                    {/* Location Badge */}
+                    <div className="absolute top-2 left-20 bg-red-100 text-red-700 text-xs px-2 py-1 rounded-full font-semibold flex items-center gap-1">
+                      <Pin className="text-base text-red-700" />
+                      {locker.location}
                     </div>
                   </div>
-                  
-                  {/* Mobile-friendly content layout */}
-                  <div className="space-y-1 md:space-y-2 mb-3 md:mb-4">
-                    {/* Status - always visible */}
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                      <span className="font-semibold eco-text-secondary text-xs md:text-sm">สถานะ:</span>
-                      <span className={`text-xs md:text-sm font-medium px-2 py-1 rounded-full inline-block w-fit ${
-                        pkg.status.includes('Delivered') || pkg.status.includes('Paid') || pkg.status.includes('Retrieved') 
-                          ? 'bg-green-100 text-green-600' 
-                          : pkg.status.includes('Locker') || pkg.status.includes('Awaiting Rider') || pkg.status.includes('En Route') 
-                          ? 'bg-blue-100 text-blue-600' 
-                          : 'bg-orange-100 text-orange-600'
-                      }`}>
-                        {pkg.status}
-                      </span>
-                    </div>
-                    
-                    {/* Rider info */}
-                    <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                      <span className="font-semibold eco-text-secondary text-xs md:text-sm">ไรเดอร์:</span>
-                      <span className="text-xs md:text-sm eco-text-primary">
-                        {riders.find(r => r.id === pkg.rider)?.name || pkg.rider || 'N/A'}
-                      </span>
-                    </div>
-                    
-                    {/* Target locker */}
-                    {pkg.targetLockerId && (
-                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
-                        <span className="font-semibold eco-text-secondary text-xs md:text-sm">ล็อกเกอร์เป้าหมาย:</span>
-                        <span className="text-xs md:text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full inline-block w-fit">
-                          🏪 {pkg.targetLockerId}
+                ))
+              )}
+            </div>
+          </div>
+
+          {/* Mobile-Optimized Package Status Section */}
+          <div className="eco-card p-4 md:p-6">
+            <div className="flex items-center justify-center space-x-2 md:space-x-3 mb-4 md:mb-6">
+              <Box className="text-xl text-yellow-400" />
+              <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary">สถานะพัสดุของคุณ</h3>
+              <div className="carbon-badge text-xs hidden md:block">
+                <span>Green Delivery</span>
+              </div>
+            </div>
+
+            {/* Mobile-friendly package grid */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-3 md:gap-4">
+              {customerPackages.length === 0 ? (
+                <div className="col-span-full text-center py-6 md:py-8">
+                  <Box className="text-4xl md:text-6xl mb-3 md:mb-4 text-yellow-400 mx-auto" />                   <p className="eco-text-secondary text-sm md:text-base">ไม่มีพัสดุในขณะนี้</p>
+                  <p className="text-xs md:text-sm eco-text-secondary mt-1 md:mt-2">เริ่มต้นการจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+                </div>
+              ) : (
+                customerPackages.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    className="eco-card p-3 md:p-4 hover:shadow-lg transition-all duration-300 group"
+                  >
+                    {/* Mobile-optimized header */}
+                    <div className="flex items-center justify-between mb-2 md:mb-3">
+                      <h3 className="text-base md:text-lg font-bold eco-text-primary">พัสดุ #{pkg.id}</h3>
+                      <div className="flex items-center space-x-1 md:space-x-2">
+                        <span className="bg-green-500 text-white text-xs eco-text-secondary sm:inline rounded-full px-2 py-1">
+                          Eco Package
                         </span>
                       </div>
-                    )}
-                  </div>
-                  
-                  {/* Rider access code - mobile responsive */}
-                  {pkg.riderLockerAccessCode && pkg.status === 'Picked Up, En Route to Locker' && (
-                    <div className="text-xs md:text-sm text-red-600 mb-2 md:mb-3 p-2 bg-red-50 rounded-lg">
-                      <span className="font-semibold block mb-1">รหัสเข้าถึงล็อกเกอร์ไรเดอร์:</span> 
-                      <span className="font-mono bg-red-100 px-2 py-1 rounded">{pkg.riderLockerAccessCode}</span>
-                      <span className="block text-xs mt-1">(สำหรับไรเดอร์)</span>
                     </div>
-                  )}
-                  
-                  {/* Mobile-optimized action buttons */}
-                  <div className="mt-2 md:mt-4 space-y-2">
-                  {pkg.status === 'Out for Delivery' && (
-                    <button
-                      onClick={() => handleRequestLocker(pkg.id)}
-                      className="w-full bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
-                    >
-                      ร้องขอจัดเก็บในล็อกเกอร์ (เปลี่ยนเส้นทาง)
-                    </button>
-                  )}
-                  {pkg.status === 'Stored in Locker' && (
-                    <>
-                      <button
-                        onClick={() => handleReceiveOTP(pkg.id)}
-                        className="w-full bg-blue-600 hover:bg-blue-700 active:bg-blue-800 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
-                      >
-                        🔑 รับ OTP ล็อกเกอร์
-                      </button>
-                      <button
-                        onClick={() => handleConfirmPackageReceipt(pkg.id)}
-                        className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
-                      >
-                        ✅ ยืนยันรับพัสดุแล้ว
-                      </button>
-                    </>
-                  )}
-                </div>
-              </div>
-            ))
-          )}
-        </div>
-      </div>
-      {showPaymentModal && packageToPay && (
-        <PaymentModal
-          packageId={packageToPay}
-          serviceFee={serviceFee}
-          onConfirmPayment={handleConfirmPayment}
-          onClose={() => setShowPaymentModal(false)}
-        />
-      )}
-      {showBookLockerModal && (
-        <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 z-50 overflow-y-auto">
-          <div className="eco-card p-4 md:p-6 w-full max-w-sm md:max-w-md mx-2 my-4 max-h-screen overflow-y-auto">
-            <div className="text-center mb-4 md:mb-6">
-              <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 float-animation">
-                <span className="text-white font-bold text-xl md:text-2xl">🌱</span>
-              </div>
-              <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary mb-2">จองล็อกเกอร์ Eco-Friendly</h3>
-              <p className="eco-text-secondary text-xs md:text-sm">การจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
-            </div>
-            
-            {/* Mobile-optimized selected locker info */}
-            {selectedLockerId && (
-              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                <div className="flex items-center space-x-2 mb-2 md:mb-3">
-                  <span className="text-green-500 text-sm md:text-base">🏪</span>
-                  <h4 className="font-semibold eco-text-primary text-sm md:text-base">ล็อกเกอร์ที่เลือก</h4>
-                </div>
-                <div className="space-y-1 md:space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs md:text-sm eco-text-secondary">รหัส:</span>
-                    <span className="text-xs md:text-sm font-medium eco-text-primary bg-green-100 px-2 py-1 rounded-full">
-                      {selectedLockerId}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs md:text-sm eco-text-secondary">ที่ตั้ง:</span>
-                    <span className="text-xs md:text-sm eco-text-primary">
-                      📍 {lockers.find(l => l.id === selectedLockerId)?.location}
-                    </span>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs md:text-sm eco-text-secondary">สถานะ:</span>
-                    <div className="flex items-center space-x-1">
-                      <div className="eco-status w-2 h-2"></div>
-                      <span className="text-xs md:text-sm text-green-600 font-medium">ว่าง</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
 
-            <form onSubmit={handleBookLocker}>
-              <div className="mb-3 md:mb-4">
-                <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="recipientName">
-                  ชื่อผู้รับ (ถ้าแตกต่างจากคุณ):
-                </label>
-                <input
-                  type="text"
-                  id="recipientName"
-                  className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
-                  placeholder="เช่น สมชาย"
-                  value={recipientName}
-                  onChange={(e) => setRecipientName(e.target.value)}
-                />
-              </div>
-              <div className="mb-4">
-                <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="packageDescription">
-                  คำอธิบายพัสดุ:
-                </label>
-                <input
-                  type="text"
-                  id="packageDescription"
-                  className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
-                  placeholder="เช่น หนังสือ, เสื้อผ้า"
-                  value={packageDescription}
-                  onChange={(e) => setPackageDescription(e.target.value)}
-                  required
-                />
-              </div>
-              
-              {/* Show locker selection only if no locker is pre-selected */}
-              {!selectedLockerId && (
-                <div className="mb-3 md:mb-4">
-                  <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="lockerSelect">
-                    เลือกล็อกเกอร์สำหรับจัดเก็บ:
-                  </label>
-                  <select
-                    id="lockerSelect"
-                    className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
-                    value={selectedLockerId}
-                    onChange={(e) => setSelectedLockerId(e.target.value)}
-                    required
-                  >
-                    <option value="">-- เลือกล็อกเกอร์ --</option>
-                    {lockers.filter(l => l.status === 'Available').map(locker => (
-                      <option key={locker.id} value={locker.id}>
-                        🏪 {locker.id} ({locker.location})
-                      </option>
-                    ))}
-                  </select>
-                </div>
+                    {/* Mobile-friendly content layout */}
+                    <div className="space-y-1 md:space-y-2 mb-3 md:mb-4">
+                      {/* Status - always visible */}
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                        <span className="font-semibold eco-text-secondary text-xs md:text-sm">สถานะ:</span>
+                        <span className={`text-xs md:text-sm font-medium px-2 py-1 rounded-full inline-block w-fit ${pkg.status.includes('Delivered') || pkg.status.includes('Paid') || pkg.status.includes('Retrieved')
+                          ? 'bg-green-100 text-green-600'
+                          : pkg.status.includes('Locker') || pkg.status.includes('Awaiting Rider') || pkg.status.includes('En Route')
+                            ? 'bg-blue-100 text-blue-600'
+                            : 'bg-orange-100 text-orange-600'
+                          }`}>
+                          {pkg.status}
+                        </span>
+                      </div>
+
+                      {/* Rider info */}
+                      <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                        <span className="font-semibold eco-text-secondary text-xs md:text-sm">ไรเดอร์:</span>
+                        <span className="text-xs md:text-sm eco-text-primary">
+                          {riders.find(r => r.id === pkg.rider)?.name || pkg.rider || 'N/A'}
+                        </span>
+                      </div>
+
+                      {/* Target locker */}
+                      {pkg.targetLockerId && (
+                        <div className="flex flex-col sm:flex-row sm:items-center space-y-1 sm:space-y-0 sm:space-x-2">
+                          <span className="font-semibold eco-text-secondary text-xs md:text-sm">ล็อกเกอร์เป้าหมาย:</span>
+                          <span className="text-xs md:text-sm eco-text-primary bg-green-100 px-2 py-1 rounded-full inline-block w-fit">
+                            {pkg.targetLockerId}
+                          </span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Rider access code - mobile responsive */}
+                    {pkg.riderLockerAccessCode && pkg.status === 'Picked Up, En Route to Locker' && (
+                      <div className="text-xs md:text-sm text-red-600 mb-2 md:mb-3 p-2 bg-red-50 rounded-lg">
+                        <span className="font-semibold block mb-1">รหัสเข้าถึงล็อกเกอร์ไรเดอร์:</span>
+                        <span className="font-mono bg-red-100 px-2 py-1 rounded">{pkg.riderLockerAccessCode}</span>
+                        <span className="block text-xs mt-1">(สำหรับไรเดอร์)</span>
+                      </div>
+                    )}
+
+                    {/* Mobile-optimized action buttons */}
+                    <div className="mt-2 md:mt-4 space-y-2">
+                      {pkg.status === 'Out for Delivery' && (
+                        <button
+                          onClick={() => handleRequestLocker(pkg.id)}
+                          className="w-full bg-yellow-500 hover:bg-yellow-600 active:bg-yellow-700 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
+                        >
+                          ร้องขอจัดเก็บในล็อกเกอร์ (เปลี่ยนเส้นทาง)
+                        </button>
+                      )}
+                      {pkg.status === 'Stored in Locker' && (
+                        <>
+                          <button
+                            onClick={() => handleReceiveOTP(pkg.id)}
+                            className="w-full bg-green-400 hover:bg-green-500 active:bg-green-700 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
+                          >
+                            รับ OTP ล็อกเกอร์
+                          </button>
+                          <button
+                            onClick={() => handleConfirmPackageReceipt(pkg.id)}
+                            className="w-full bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white font-bold py-3 md:py-2 px-4 rounded-lg text-sm transition duration-200 ease-in-out transform active:scale-95 touch-manipulation"
+                          >
+                            ยืนยันรับพัสดุแล้ว
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                ))
               )}
-              
-              <div className="mb-4 md:mb-6">
-                <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="riderSelect">
-                  เลือกไรเดอร์:
-                </label>
-                <select
-                  id="riderSelect"
-                  className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
-                  value={selectedRiderId}
-                  onChange={(e) => setSelectedRiderId(e.target.value)}
-                  required
-                >
-                  <option value="">-- เลือกไรเดอร์ --</option>
-                  {riders.map(rider => (
-                    <option key={rider.id} value={rider.id}>
-                      🚲 {rider.name}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Mobile-optimized eco-friendly message */}
-              <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
-                <div className="flex items-center space-x-1 md:space-x-2 mb-1 md:mb-2">
-                  <span className="text-green-500 text-sm md:text-base">🌍</span>
-                  <span className="text-xs md:text-sm font-semibold eco-text-primary">การจัดส่งเพื่อสิ่งแวดล้อม</span>
-                </div>
-                <p className="text-xs eco-text-secondary">
-                  การจัดส่งแต่ละครั้งช่วยลดการปล่อยคาร์บอน และใช้บรรจุภัณฑ์ที่เป็นมิตรกับสิ่งแวดล้อม
-                </p>
-              </div>
-              
-              {/* Mobile-optimized action buttons */}
-              <div className="flex flex-col space-y-2 md:flex-row md:justify-end md:space-y-0 md:space-x-3">
-                <button
-                  type="button"
-                  onClick={handleCloseBookLockerModal}
-                  className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 eco-text-primary font-semibold py-3 px-4 rounded-lg text-sm transition-all duration-200 w-full md:w-auto border border-gray-300 touch-manipulation"
-                >
-                  ยกเลิก
-                </button>
-                <button
-                  type="submit"
-                  className="eco-button font-semibold py-3 px-4 rounded-lg text-sm w-full md:w-auto flex items-center justify-center space-x-2 touch-manipulation active:scale-95 transition-transform duration-200"
-                >
-                  <span>🌱</span>
-                  <span>จองล็อกเกอร์</span>
-                </button>
-              </div>
-            </form>
+            </div>
           </div>
-        </div>
-      )}
-      {showOTPModal && (
-        <OTPDisplayModal
-          packageId={otpPackageId}
-          otp={otpToShow}
-          onClose={() => setShowOTPModal(false)}
-        />
-      )}
-      {showConfirmReceiptModal && packageToConfirmReceipt && (
-        <PackageReceiptConfirmationModal
-          package={packageToConfirmReceipt}
-          onConfirmReceipt={handleFinalConfirmReceipt}
-          onClose={() => setShowConfirmReceiptModal(false)}
-        />
-      )}
+          {showPaymentModal && packageToPay && (
+            <PaymentModal
+              packageId={packageToPay}
+              serviceFee={serviceFee}
+              onConfirmPayment={handleConfirmPayment}
+              onClose={() => setShowPaymentModal(false)}
+            />
+          )}
+          {showBookLockerModal && (
+            <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 z-50 overflow-y-auto">
+              <div className="eco-card p-4 md:p-6 w-full max-w-sm md:max-w-md mx-2 my-4 max-h-screen overflow-y-auto">
+                <div className="text-center mb-4 md:mb-6">
+                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 float-animation">
+                    <span className="text-white font-bold text-xl md:text-2xl">🌱</span>
+                  </div>
+                  <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary mb-2">จองล็อกเกอร์ Eco-Friendly</h3>
+                  <p className="eco-text-secondary text-xs md:text-sm">การจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
+                </div>
+
+                {/* Mobile-optimized selected locker info */}
+                {selectedLockerId && (
+                  <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="flex items-center space-x-2 mb-2 md:mb-3">
+                      <span className="text-green-500 text-sm md:text-base">🏪</span>
+                      <h4 className="font-semibold eco-text-primary text-sm md:text-base">ล็อกเกอร์ที่เลือก</h4>
+                    </div>
+                    <div className="space-y-1 md:space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm eco-text-secondary">รหัส:</span>
+                        <span className="text-xs md:text-sm font-medium eco-text-primary bg-green-100 px-2 py-1 rounded-full">
+                          {selectedLockerId}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm eco-text-secondary">ที่ตั้ง:</span>
+                        <span className="text-xs md:text-sm eco-text-primary flex items-center gap-1">
+                          <Pin className="text-green-600 text-sm md:text-base" />
+                          {lockers.find(l => l.id === selectedLockerId)?.location}
+                        </span>
+
+                      </div>
+                      <div className="flex items-center justify-between">
+                        <span className="text-xs md:text-sm eco-text-secondary">สถานะ:</span>
+                        <div className="flex items-center space-x-1">
+                          <div className="eco-status w-2 h-2"></div>
+                          <span className="text-xs md:text-sm text-green-600 font-medium">ว่าง</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                <form onSubmit={handleBookLocker}>
+                  <div className="mb-3 md:mb-4">
+                    <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="recipientName">
+                      ชื่อผู้รับ (ถ้าแตกต่างจากคุณ):
+                    </label>
+                    <input
+                      type="text"
+                      id="recipientName"
+                      className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
+                      placeholder="เช่น สมชาย"
+                      value={recipientName}
+                      onChange={(e) => setRecipientName(e.target.value)}
+                    />
+                  </div>
+                  <div className="mb-4">
+                    <label className="block eco-text-primary text-sm font-semibold mb-2" htmlFor="packageDescription">
+                      คำอธิบายพัสดุ:
+                    </label>
+                    <input
+                      type="text"
+                      id="packageDescription"
+                      className="eco-card border-2 border-green-200 rounded-lg w-full py-3 px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm md:text-base transition-all duration-300"
+                      placeholder="เช่น หนังสือ, เสื้อผ้า"
+                      value={packageDescription}
+                      onChange={(e) => setPackageDescription(e.target.value)}
+                      required
+                    />
+                  </div>
+
+                  {/* Show locker selection only if no locker is pre-selected */}
+                  {!selectedLockerId && (
+                    <div className="mb-3 md:mb-4">
+                      <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="lockerSelect">
+                        เลือกล็อกเกอร์สำหรับจัดเก็บ:
+                      </label>
+                      <select
+                        id="lockerSelect"
+                        className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
+                        value={selectedLockerId}
+                        onChange={(e) => setSelectedLockerId(e.target.value)}
+                        required
+                      >
+                        <option value="">-- เลือกล็อกเกอร์ --</option>
+                        {lockers.filter(l => l.status === 'Available').map(locker => (
+                          <option key={locker.id} value={locker.id}>
+                            {locker.id} ({locker.location})
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                  )}
+
+                  <div className="mb-4 md:mb-6">
+                    <label className="block eco-text-primary text-xs md:text-sm font-semibold mb-1 md:mb-2" htmlFor="riderSelect">
+                      เลือกไรเดอร์:
+                    </label>
+                    <select
+                      id="riderSelect"
+                      className="eco-card border-2 border-green-200 rounded-lg w-full py-2 md:py-3 px-3 md:px-4 eco-text-primary leading-tight focus:outline-none focus:ring-2 focus:ring-green-400 focus:border-green-400 text-sm transition-all duration-300 touch-manipulation"
+                      value={selectedRiderId}
+                      onChange={(e) => setSelectedRiderId(e.target.value)}
+                      required
+                    >
+                      <option value="">-- เลือกไรเดอร์ --</option>
+                      {riders.map(rider => (
+                        <option key={rider.id} value={rider.id}>
+                          {rider.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
+
+                  {/* Mobile-optimized eco-friendly message */}
+                  <div className="mb-4 md:mb-6 p-3 md:p-4 bg-gradient-to-r from-green-50 to-emerald-50 rounded-lg border border-green-200">
+                    <div className="flex items-center space-x-1 md:space-x-2 mb-1 md:mb-2">
+                      <span className="text-xs md:text-sm font-semibold eco-text-primary">การจัดส่งเพื่อสิ่งแวดล้อม</span>
+                    </div>
+                    <p className="text-xs eco-text-secondary">
+                      การจัดส่งแต่ละครั้งช่วยลดการปล่อยคาร์บอน และใช้บรรจุภัณฑ์ที่เป็นมิตรกับสิ่งแวดล้อม
+                    </p>
+                  </div>
+
+                  {/* Mobile-optimized action buttons */}
+                  <div className="flex flex-col space-y-2 md:flex-row md:justify-end md:space-y-0 md:space-x-3">
+                    <button
+                      type="button"
+                      onClick={handleCloseBookLockerModal}
+                      className="bg-gray-200 hover:bg-gray-300 active:bg-gray-400 eco-text-primary font-semibold py-3 px-4 rounded-lg text-sm transition-all duration-200 w-full md:w-auto border border-gray-300 touch-manipulation"
+                    >
+                      ยกเลิก
+                    </button>
+                    <button
+                      type="submit"
+                      className="eco-button font-semibold py-3 px-4 rounded-lg text-sm w-full md:w-auto flex items-center justify-center space-x-2 touch-manipulation active:scale-95 transition-transform duration-200"
+                    >
+                      <span>🌱</span>
+                      <span>จองล็อกเกอร์</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          )}
+          {showOTPModal && (
+            <OTPDisplayModal
+              packageId={otpPackageId}
+              otp={otpToShow}
+              onClose={() => setShowOTPModal(false)}
+            />
+          )}
+          {showConfirmReceiptModal && packageToConfirmReceipt && (
+            <PackageReceiptConfirmationModal
+              package={packageToConfirmReceipt}
+              onConfirmReceipt={handleFinalConfirmReceipt}
+              onClose={() => setShowConfirmReceiptModal(false)}
+            />
+          )}
         </div>
       </div>
     </div>
@@ -1186,9 +1197,9 @@ const RiderDashboard: React.FC<RiderDashboardProps> = ({ packages, onUpdatePacka
         let newStatus = pkg.status;
         let riderLockerAccessCode = pkg.riderLockerAccessCode;
 
-        if (pkg.status === 'Locker Reserved, Awaiting Rider Pickup' || 
-            pkg.status === 'Paid, Ready for Rider Pickup' || 
-            pkg.status === 'Locker Requested') {
+        if (pkg.status === 'Locker Reserved, Awaiting Rider Pickup' ||
+          pkg.status === 'Paid, Ready for Rider Pickup' ||
+          pkg.status === 'Locker Requested') {
           newStatus = 'Picked Up, En Route to Locker';
           riderLockerAccessCode = generateOTP(); // Generate code for rider to open the target locker
         } else if (pkg.status === 'Pending') { // For general unassigned jobs if we add them later
@@ -1230,21 +1241,21 @@ const RiderDashboard: React.FC<RiderDashboardProps> = ({ packages, onUpdatePacka
       // Use targetLockerId if pre-booked, otherwise require manual input
       const finalLockerId = currentPackage.targetLockerId || lockerNumber;
       if (!finalLockerId) {
-         setMessageType('error');
-         setMessage('กรุณาป้อนหมายเลขล็อกเกอร์หรือเลือกงานที่มีล็อกเกอร์เป้าหมาย');
-         return;
+        setMessageType('error');
+        setMessage('กรุณาป้อนหมายเลขล็อกเกอร์หรือเลือกงานที่มีล็อกเกอร์เป้าหมาย');
+        return;
       }
       const customerOtp = generateOTP(); // OTP for customer retrieval
 
       // Store the original paid status before changing status
       const wasAlreadyPaid = currentPackage.paid;
       const wasPreBookedLocker = currentPackage.status === 'Paid, Ready for Rider Pickup';
-      
+
       currentPackage.status = 'Stored in Locker';
       currentPackage.lockerId = finalLockerId;
       currentPackage.customerRetrievalOTP = customerOtp;
       currentPackage.riderLockerAccessCode = null; // Rider's code is no longer needed
-      
+
       // Keep payment status: if customer already paid (pre-booked locker), don't require payment again
       if (wasPreBookedLocker || wasAlreadyPaid) {
         currentPackage.paid = true; // Customer already paid when booking locker
@@ -1653,15 +1664,19 @@ function App() {
           <div className="max-w-7xl mx-auto flex flex-col sm:flex-row justify-between items-center space-y-2 sm:space-y-0">
             <div className="flex items-center space-x-3">
               <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation">
-                  <span className="text-white font-bold text-lg">🌱</span>
+                <div className="w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center float-animation overflow-hidden">
+                  <img
+                    src="/Image/EcoDeliver.jpg"
+                    alt="plant icon"
+                    className="w-20 h-20 md:w-20 md:h-20 object-contain"
+                  />
                 </div>
+
                 <h1 className="eco-text-primary text-xl md:text-2xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent">
                   EcoDeliver
                 </h1>
               </div>
               <div className="carbon-badge">
-                <span>🌍</span>
                 <span>Carbon Neutral</span>
               </div>
             </div>
