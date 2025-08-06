@@ -27,6 +27,23 @@ interface Rider {
   name: string;
 }
 
+// Carbon Tracking Interfaces
+interface RecyclingStep {
+  id: string;
+  title: string;
+  description: string;
+  icon: string;
+  completed: boolean;
+  co2Impact: number; // grams of CO2 saved
+}
+
+interface EcoStats {
+  totalCO2Saved: number;
+  packagesDelivered: number;
+  recyclingRate: number;
+  ecoScore: number;
+}
+
 interface MessageBoxProps {
   message: string;
   type: 'success' | 'error' | 'info';
@@ -54,6 +71,20 @@ interface PackageReceiptConfirmationModalProps {
 
 interface AuthScreenProps {
   onLoginSuccess: (role: string) => void;
+}
+
+// Carbon Tracking Modal Props
+interface CarbonTrackingModalProps {
+  isOpen: boolean;
+  packageId: string;
+  onClose: () => void;
+  ecoStats: EcoStats;
+}
+
+interface RecyclingGuideModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onCompleteStep: (stepId: string) => void;
 }
 
 interface CustomerDashboardProps {
@@ -328,6 +359,223 @@ const PackageReceiptConfirmationModal: React.FC<PackageReceiptConfirmationModalP
                 <span>ยืนยันการรับพัสดุ</span>
               </>
             )}
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Carbon Tracking Modal ---
+const CarbonTrackingModal: React.FC<CarbonTrackingModalProps> = ({ isOpen, packageId, onClose, ecoStats }) => {
+  if (!isOpen) return null;
+
+  const carbonSteps = [
+    { id: 'order', title: 'การสั่งซื้อ', icon: '📱', co2Saved: 50, completed: true },
+    { id: 'pickup', title: 'การรับพัสดุ', icon: '📦', co2Saved: 100, completed: true },
+    { id: 'delivery', title: 'การจัดส่ง', icon: '🚴‍♂️', co2Saved: 200, completed: true },
+    { id: 'recycling', title: 'การรีไซเคิล', icon: '♻️', co2Saved: 150, completed: false }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-green-500 to-emerald-600 text-white p-6 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">🌱 Carbon Tracking</h3>
+              <p className="text-green-100 text-sm">แนวทางการลดคาร์บอน</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-green-200 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* CO2 Stats */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border-2 border-green-200">
+            <div className="text-center">
+              <div className="text-3xl font-bold text-green-600">{ecoStats.totalCO2Saved}g</div>
+              <div className="text-sm text-green-700">CO₂ ที่ประหยัดได้</div>
+            </div>
+          </div>
+
+          {/* Carbon Steps */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-gray-800 flex items-center space-x-2">
+              <span>📋</span>
+              <span>ขั้นตอนการลดคาร์บอน</span>
+            </h4>
+            
+            {carbonSteps.map((step, index) => (
+              <div key={step.id} className="flex items-center space-x-4 p-3 bg-gray-50 rounded-lg">
+                <div className="text-2xl">{step.icon}</div>
+                <div className="flex-1">
+                  <div className="font-medium text-gray-800">STEP {index + 1}: {step.title}</div>
+                  <div className="text-sm text-gray-600">CO₂ ประหยัด: {step.co2Saved}g</div>
+                </div>
+                <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
+                  step.completed ? 'bg-green-500 text-white' : 'bg-gray-300'
+                }`}>
+                  {step.completed ? '✓' : index + 1}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Eco Impact */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h5 className="font-bold text-blue-800 mb-3">🌍 ผลกระทบด้านสิ่งแวดล้อม</h5>
+            <div className="grid grid-cols-2 gap-4 text-center">
+              <div>
+                <div className="text-lg font-bold text-blue-600">{ecoStats.packagesDelivered}</div>
+                <div className="text-xs text-blue-700">พัสดุที่จัดส่ง</div>
+              </div>
+              <div>
+                <div className="text-lg font-bold text-blue-600">{ecoStats.recyclingRate}%</div>
+                <div className="text-xs text-blue-700">อัตราการรีไซเคิล</div>
+              </div>
+            </div>
+          </div>
+
+          {/* Action Button */}
+          <button
+            onClick={onClose}
+            className="eco-button font-semibold py-3 px-6 rounded-lg text-sm w-full flex items-center justify-center space-x-2"
+          >
+            <span>🌱</span>
+            <span>เข้าใจแล้ว</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Recycling Guide Modal ---
+const RecyclingGuideModal: React.FC<RecyclingGuideModalProps> = ({ isOpen, onClose, onCompleteStep }) => {
+  if (!isOpen) return null;
+
+  const recyclingSteps: RecyclingStep[] = [
+    {
+      id: 'unpack',
+      title: 'แกะพัสดุ',
+      description: 'แกะพัสดุและแยกกล่องออกจากสินค้า',
+      icon: '📦',
+      completed: false,
+      co2Impact: 30
+    },
+    {
+      id: 'sort',
+      title: 'แยกประเภท',
+      description: 'แยกวัสดุแต่ละประเภท (กระดาษ, พลาสติก, อื่นๆ)',
+      icon: '🗂️',
+      completed: false,
+      co2Impact: 50
+    },
+    {
+      id: 'clean',
+      title: 'ทำความสะอาด',
+      description: 'ทำความสะอาดบรรจุภัณฑ์ให้พร้อมรีไซเคิล',
+      icon: '🧼',
+      completed: false,
+      co2Impact: 40
+    },
+    {
+      id: 'recycle',
+      title: 'นำไปรีไซเคิล',
+      description: 'นำวัสดุไปยังจุดรีไซเคิลหรือใช้ซ้ำ',
+      icon: '♻️',
+      completed: false,
+      co2Impact: 80
+    }
+  ];
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-emerald-500 to-green-600 text-white p-6 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">♻️ คู่มือการรีไซเคิล</h3>
+              <p className="text-emerald-100 text-sm">ลดผลกระทบสิ่งแวดล้อม</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-emerald-200 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Impact Summary */}
+          <div className="bg-gradient-to-r from-emerald-50 to-green-50 p-4 rounded-lg border-2 border-emerald-200 text-center">
+            <div className="text-2xl font-bold text-emerald-600">200g CO₂</div>
+            <div className="text-sm text-emerald-700">ประหยัดได้จากการรีไซเคิล</div>
+          </div>
+
+          {/* Steps */}
+          <div className="space-y-4">
+            <h4 className="font-bold text-gray-800 flex items-center space-x-2">
+              <span>📋</span>
+              <span>ขั้นตอนการรีไซเคิล</span>
+            </h4>
+            
+            {recyclingSteps.map((step, index) => (
+              <div key={step.id} className="border border-gray-200 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="text-2xl">{step.icon}</div>
+                  <div className="flex-1">
+                    <div className="font-medium text-gray-800">
+                      ขั้นตอนที่ {index + 1}: {step.title}
+                    </div>
+                    <div className="text-sm text-gray-600 mt-1">{step.description}</div>
+                    <div className="text-xs text-emerald-600 mt-2">
+                      CO₂ ประหยัด: {step.co2Impact}g
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => onCompleteStep(step.id)}
+                    className={`px-3 py-1 rounded-full text-xs font-medium ${
+                      step.completed 
+                        ? 'bg-green-100 text-green-700' 
+                        : 'bg-gray-100 text-gray-600 hover:bg-emerald-100 hover:text-emerald-700'
+                    }`}
+                  >
+                    {step.completed ? '✅ เสร็จ' : '⏳ ทำ'}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Tips */}
+          <div className="bg-yellow-50 p-4 rounded-lg border border-yellow-200">
+            <h5 className="font-bold text-yellow-800 mb-2">💡 เคล็ดลับ</h5>
+            <ul className="text-sm text-yellow-700 space-y-1">
+              <li>• กล่องกระดาษสามารถนำมาใช้ซ้ำได้</li>
+              <li>• ฟองน้ำห่อหุ้มสามารถใช้ป้องกันของเปราะได้</li>
+              <li>• รีไซเคิลช่วยลดขยะและประหยัดพลังงาน</li>
+            </ul>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="eco-button font-semibold py-3 px-6 rounded-lg text-sm w-full flex items-center justify-center space-x-2"
+          >
+            <span>♻️</span>
+            <span>เข้าใจแล้ว</span>
           </button>
         </div>
       </div>
@@ -1589,6 +1837,17 @@ function App() {
   const serviceFee = 2.50; // Default fee, passed down to CustomerDashboard
   const commissionRate = 0.15; // Default 15% commission, passed down to RiderDashboard
 
+  // Carbon Tracking States
+  const [showCarbonTracking, setShowCarbonTracking] = useState(false);
+  const [showRecyclingGuide, setShowRecyclingGuide] = useState(false);
+  const [selectedPackageForCarbon, setSelectedPackageForCarbon] = useState<string>('');
+  const [ecoStats, setEcoStats] = useState<EcoStats>({
+    totalCO2Saved: 485,
+    packagesDelivered: 24,
+    recyclingRate: 78,
+    ecoScore: 92
+  });
+
   // Mock data for riders
   const riders: Rider[] = [
     { id: 'Rider A', name: 'ไรเดอร์ A' },
@@ -1639,6 +1898,26 @@ function App() {
     setUserId('user_' + Math.random().toString(36).substring(2, 7)); // Generate new ID on logout
   };
 
+  // Carbon Tracking Functions
+  const handleShowCarbonTracking = (packageId: string) => {
+    setSelectedPackageForCarbon(packageId);
+    setShowCarbonTracking(true);
+  };
+
+  const handleShowRecyclingGuide = () => {
+    setShowRecyclingGuide(true);
+  };
+
+  const handleCompleteRecyclingStep = (stepId: string) => {
+    // Update eco stats when recycling step is completed
+    setEcoStats(prev => ({
+      ...prev,
+      totalCO2Saved: prev.totalCO2Saved + 50, // Add CO2 savings for completed step
+      recyclingRate: Math.min(100, prev.recyclingRate + 2), // Increase recycling rate
+      ecoScore: Math.min(100, prev.ecoScore + 1) // Increase eco score
+    }));
+  };
+
   const renderDashboard = () => {
     switch (currentUserRole) {
       case 'customer':
@@ -1680,6 +1959,25 @@ function App() {
                 <div className="eco-status"></div>
                 <span className="eco-text-secondary text-sm md:text-base capitalize">{currentUserRole} แดชบอร์ด</span>
               </div>
+              
+              {/* Carbon Tracking Buttons */}
+              <button
+                onClick={() => handleShowCarbonTracking('current')}
+                className="bg-gradient-to-r from-green-400 to-emerald-500 hover:from-green-500 hover:to-emerald-600 text-white font-semibold py-2 px-3 rounded-lg text-xs md:text-sm transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg flex items-center space-x-1"
+                title="ติดตาม Carbon Footprint"
+              >
+                <span>🌱</span>
+                <span className="hidden md:block">Carbon</span>
+              </button>
+              
+              <button
+                onClick={handleShowRecyclingGuide}
+                className="bg-gradient-to-r from-emerald-400 to-green-500 hover:from-emerald-500 hover:to-green-600 text-white font-semibold py-2 px-3 rounded-lg text-xs md:text-sm transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg flex items-center space-x-1"
+                title="คู่มือการรีไซเคิล"
+              >
+                <span>♻️</span>
+                <span className="hidden md:block">Recycle</span>
+              </button>
               <button
                 onClick={handleLogout}
                 className="bg-gradient-to-r from-red-400 to-red-500 hover:from-red-500 hover:to-red-600 text-white font-semibold py-2 px-4 rounded-lg text-sm transition-all duration-300 ease-in-out transform hover:scale-105 hover:shadow-lg"
@@ -1691,6 +1989,20 @@ function App() {
         </nav>
       )}
       {renderDashboard()}
+      
+      {/* Carbon Tracking Modals */}
+      <CarbonTrackingModal
+        isOpen={showCarbonTracking}
+        packageId={selectedPackageForCarbon}
+        onClose={() => setShowCarbonTracking(false)}
+        ecoStats={ecoStats}
+      />
+      
+      <RecyclingGuideModal
+        isOpen={showRecyclingGuide}
+        onClose={() => setShowRecyclingGuide(false)}
+        onCompleteStep={handleCompleteRecyclingStep}
+      />
     </div>
   );
 }
