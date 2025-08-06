@@ -44,6 +44,42 @@ interface EcoStats {
   ecoScore: number;
 }
 
+// Points System Interfaces
+interface EcoPoints {
+  totalPoints: number;
+  level: string;
+  nextLevelPoints: number;
+  currentLevelPoints: number;
+  badges: Badge[];
+  history: PointTransaction[];
+}
+
+interface Badge {
+  id: string;
+  name: string;
+  icon: string;
+  description: string;
+  earnedDate?: Date;
+  earned: boolean;
+}
+
+interface PointTransaction {
+  id: string;
+  activity: string;
+  points: number;
+  date: Date;
+  type: 'earn' | 'redeem';
+  icon: string;
+}
+
+// Photo Upload Interface
+interface PhotoUpload {
+  id: string;
+  file: File | null;
+  preview: string;
+  uploaded: boolean;
+}
+
 interface MessageBoxProps {
   message: string;
   type: 'success' | 'error' | 'info';
@@ -85,6 +121,21 @@ interface RecyclingGuideModalProps {
   isOpen: boolean;
   onClose: () => void;
   onCompleteStep: (stepId: string) => void;
+}
+
+// Photo Upload Modal Props
+interface PhotoUploadModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onPhotoSubmit: (photo: File) => void;
+  stepTitle: string;
+}
+
+// Points Dashboard Modal Props
+interface PointsDashboardModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  ecoPoints: EcoPoints;
 }
 
 interface CustomerDashboardProps {
@@ -583,6 +634,260 @@ const RecyclingGuideModal: React.FC<RecyclingGuideModalProps> = ({ isOpen, onClo
   );
 };
 
+// --- Photo Upload Modal ---
+const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose, onPhotoSubmit, stepTitle }) => {
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [preview, setPreview] = useState<string>('');
+  const [uploading, setUploading] = useState(false);
+
+  if (!isOpen) return null;
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const reader = new FileReader();
+      reader.onload = () => {
+        setPreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleSubmit = () => {
+    if (selectedFile) {
+      setUploading(true);
+      setTimeout(() => {
+        onPhotoSubmit(selectedFile);
+        setUploading(false);
+        onClose();
+        setSelectedFile(null);
+        setPreview('');
+      }, 2000);
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">📸 อัปโหลดรูปภาพ</h3>
+              <p className="text-blue-100 text-sm">{stepTitle}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-blue-200 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Instructions */}
+          <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+            <h4 className="font-bold text-blue-800 mb-2">📋 วิธีการ</h4>
+            <ul className="text-sm text-blue-700 space-y-1">
+              <li>• ถ่ายรูปการแยกขยะหรือการรีไซเคิล</li>
+              <li>• แสดงให้เห็นการใช้กล่องซ้ำ</li>
+              <li>• ได้รับ 50 แต้ม + badge พิเศษ</li>
+            </ul>
+          </div>
+
+          {/* File Upload */}
+          <div className="border-2 border-dashed border-gray-300 rounded-lg p-8 text-center">
+            {preview ? (
+              <div className="space-y-4">
+                <img 
+                  src={preview} 
+                  alt="Preview" 
+                  className="mx-auto max-h-48 rounded-lg shadow-md"
+                />
+                <p className="text-green-600 font-medium">✅ รูปภาพพร้อมอัปโหลด</p>
+              </div>
+            ) : (
+              <div className="space-y-4">
+                <div className="text-6xl">📷</div>
+                <div>
+                  <p className="text-gray-600 mb-2">คลิกเพื่อเลือกรูปภาพ</p>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleFileSelect}
+                    className="hidden"
+                    id="photo-upload"
+                  />
+                  <label
+                    htmlFor="photo-upload"
+                    className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-2 px-4 rounded-lg cursor-pointer transition-colors"
+                  >
+                    เลือกรูปภาพ
+                  </label>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Points Reward */}
+          <div className="bg-gradient-to-r from-yellow-50 to-orange-50 p-4 rounded-lg border-2 border-yellow-200">
+            <div className="text-center">
+              <div className="text-2xl mb-2">🏆</div>
+              <div className="text-lg font-bold text-orange-600">+50 แต้ม</div>
+              <div className="text-sm text-orange-700">สำหรับการรีไซเคิล</div>
+            </div>
+          </div>
+
+          {/* Action Buttons */}
+          <div className="flex space-x-4">
+            <button
+              onClick={onClose}
+              className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800 font-semibold py-3 px-6 rounded-lg transition-colors"
+              disabled={uploading}
+            >
+              ยกเลิก
+            </button>
+            <button
+              onClick={handleSubmit}
+              disabled={!selectedFile || uploading}
+              className="flex-1 bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-600 hover:to-emerald-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
+            >
+              {uploading ? (
+                <>
+                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent"></div>
+                  <span>กำลังอัปโหลด...</span>
+                </>
+              ) : (
+                <>
+                  <span>📤</span>
+                  <span>อัปโหลด</span>
+                </>
+              )}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// --- Points Dashboard Modal ---
+const PointsDashboardModal: React.FC<PointsDashboardModalProps> = ({ isOpen, onClose, ecoPoints }) => {
+  if (!isOpen) return null;
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-purple-500 to-pink-600 text-white p-6 rounded-t-xl">
+          <div className="flex items-center justify-between">
+            <div>
+              <h3 className="text-xl font-bold">🏆 แต้มสะสม EcoPoints</h3>
+              <p className="text-purple-100 text-sm">Level: {ecoPoints.level}</p>
+            </div>
+            <button
+              onClick={onClose}
+              className="text-white hover:text-purple-200 text-2xl"
+            >
+              ×
+            </button>
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="p-6 space-y-6">
+          {/* Points Summary */}
+          <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-lg border-2 border-purple-200 text-center">
+            <div className="text-4xl font-bold text-purple-600">{ecoPoints.totalPoints}</div>
+            <div className="text-purple-700 font-medium">แต้มทั้งหมด</div>
+            <div className="mt-2 text-sm text-purple-600">
+              อีก {ecoPoints.nextLevelPoints - ecoPoints.currentLevelPoints} แต้ม จะขึ้นเลเวล
+            </div>
+          </div>
+
+          {/* Level Progress */}
+          <div className="space-y-2">
+            <div className="flex justify-between text-sm">
+              <span className="text-gray-600">Progress to next level</span>
+              <span className="text-purple-600 font-medium">{ecoPoints.currentLevelPoints}/{ecoPoints.nextLevelPoints}</span>
+            </div>
+            <div className="w-full bg-gray-200 rounded-full h-3">
+              <div 
+                className="bg-gradient-to-r from-purple-500 to-pink-500 h-3 rounded-full transition-all duration-300"
+                style={{ width: `${(ecoPoints.currentLevelPoints / ecoPoints.nextLevelPoints) * 100}%` }}
+              ></div>
+            </div>
+          </div>
+
+          {/* Badges */}
+          <div className="space-y-3">
+            <h4 className="font-bold text-gray-800 flex items-center space-x-2">
+              <span>🏅</span>
+              <span>Badges ที่ได้รับ</span>
+            </h4>
+            <div className="grid grid-cols-2 gap-3">
+              {ecoPoints.badges.map((badge) => (
+                <div 
+                  key={badge.id} 
+                  className={`p-3 rounded-lg border text-center ${
+                    badge.earned 
+                      ? 'bg-yellow-50 border-yellow-300' 
+                      : 'bg-gray-50 border-gray-300 opacity-50'
+                  }`}
+                >
+                  <div className="text-2xl mb-1">{badge.icon}</div>
+                  <div className="text-xs font-medium text-gray-800">{badge.name}</div>
+                  {badge.earned && badge.earnedDate && (
+                    <div className="text-xs text-yellow-600 mt-1">
+                      {badge.earnedDate.toLocaleDateString()}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Recent Activity */}
+          <div className="space-y-3">
+            <h4 className="font-bold text-gray-800 flex items-center space-x-2">
+              <span>📊</span>
+              <span>กิจกรรมล่าสุด</span>
+            </h4>
+            <div className="space-y-2 max-h-32 overflow-y-auto">
+              {ecoPoints.history.slice(0, 5).map((transaction) => (
+                <div key={transaction.id} className="flex items-center justify-between p-2 bg-gray-50 rounded">
+                  <div className="flex items-center space-x-2">
+                    <span className="text-lg">{transaction.icon}</span>
+                    <div>
+                      <div className="text-sm font-medium text-gray-800">{transaction.activity}</div>
+                      <div className="text-xs text-gray-600">{transaction.date.toLocaleDateString()}</div>
+                    </div>
+                  </div>
+                  <div className={`font-bold ${transaction.type === 'earn' ? 'text-green-600' : 'text-red-600'}`}>
+                    {transaction.type === 'earn' ? '+' : '-'}{transaction.points}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Close Button */}
+          <button
+            onClick={onClose}
+            className="w-full bg-gradient-to-r from-purple-500 to-pink-600 hover:from-purple-600 hover:to-pink-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors flex items-center justify-center space-x-2"
+          >
+            <span>🏆</span>
+            <span>ปิด</span>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 
 // --- Authentication Component ---
 const AuthScreen: React.FC<AuthScreenProps> = ({ onLoginSuccess }) => {
@@ -755,6 +1060,86 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
   const [showConfirmReceiptModal, setShowConfirmReceiptModal] = useState(false);
   const [packageToConfirmReceipt, setPackageToConfirmReceipt] = useState<Package | null>(null);
 
+  // Carbon tracking and recycling states
+  const [showCarbonModal, setShowCarbonModal] = useState(false);
+  const [carbonProgress] = useState({
+    orderDelivery: 50,
+    pickup: 100,
+    delivery: 200,
+    recycling: 150
+  });
+  const [currentStep, setCurrentStep] = useState(1);
+  const [completedSteps, setCompletedSteps] = useState<boolean[]>([false, false, false, false]);
+  const [showRecyclingGuide, setShowRecyclingGuide] = useState(false);
+  const [showPhotoUpload, setShowPhotoUpload] = useState(false);
+  const [showPointsDashboard, setShowPointsDashboard] = useState(false);
+  const [ecoPoints, setEcoPoints] = useState<EcoPoints>({
+    totalPoints: 250,
+    level: "3",
+    nextLevelPoints: 300,
+    currentLevelPoints: 250,
+    badges: [
+      {
+        id: '1',
+        name: 'Green Starter',
+        icon: '🌱',
+        description: 'เริ่มต้นการลดคาร์บอน',
+        earned: true,
+        earnedDate: new Date('2024-01-15')
+      },
+      {
+        id: '2',
+        name: 'Eco Warrior',
+        icon: '♻️',
+        description: 'รีไซเคิล 5 ครั้ง',
+        earned: true,
+        earnedDate: new Date('2024-01-20')
+      },
+      {
+        id: '3',
+        name: 'Carbon Saver',
+        icon: '🌍',
+        description: 'ประหยัด CO2 100g',
+        earned: false,
+        earnedDate: undefined
+      },
+      {
+        id: '4',
+        name: 'Delivery Hero',
+        icon: '🚚',
+        description: 'ใช้บริการ 10 ครั้ง',
+        earned: false,
+        earnedDate: undefined
+      }
+    ],
+    history: [
+      {
+        id: '1',
+        activity: 'อัปโหลดรูปการรีไซเคิล',
+        points: 50,
+        date: new Date(),
+        type: 'earn',
+        icon: '📸'
+      },
+      {
+        id: '2', 
+        activity: 'เสร็จสิ้นการสั่งอาหาร',
+        points: 25,
+        date: new Date(Date.now() - 86400000),
+        type: 'earn',
+        icon: '🍕'
+      },
+      {
+        id: '3',
+        activity: 'แลกคูปองลดราคา',
+        points: 100,
+        date: new Date(Date.now() - 172800000),
+        type: 'redeem',
+        icon: '🎟️'
+      }
+    ]
+  });
+
   // Check for new packages stored in locker and notify customer
   React.useEffect(() => {
     const customerPackages = packages.filter(pkg => pkg.customer === userId);
@@ -914,6 +1299,38 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
     setSelectedRiderId('');
     setRecipientName('');
     setPackageDescription('');
+  };
+
+  // Photo upload handler for recycling step
+  const handlePhotoSubmit = (file: File) => {
+    // Add points for recycling photo submission
+    setEcoPoints(prev => ({
+      ...prev,
+      totalPoints: prev.totalPoints + 50,
+      currentLevelPoints: prev.currentLevelPoints + 50,
+      history: [
+        {
+          id: Date.now().toString(),
+          activity: 'อัปโหลดรูปการรีไซเคิล',
+          points: 50,
+          date: new Date(),
+          type: 'earn',
+          icon: '📸'
+        },
+        ...prev.history
+      ]
+    }));
+
+    // Mark recycling step as completed
+    setCompletedSteps(prev => {
+      const newSteps = [...prev];
+      newSteps[3] = true; // Step 4 (recycling)
+      return newSteps;
+    });
+
+    setMessage('🎉 ยินดีด้วย! คุณได้รับ 50 แต้มจากการอัปโหลดรูปการรีไซเคิล');
+    setMessageType('success');
+    setShowPhotoUpload(false);
   };
 
   const handleConfirmPayment = (packageId: string) => {
@@ -1395,6 +1812,55 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
               </div>
             </div>
           )}
+
+          {/* New Eco Features Section */}
+          <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 md:p-6 rounded-lg border-2 border-green-200 mb-6">
+            <h3 className="text-lg md:text-xl font-bold text-green-800 mb-4 flex items-center space-x-2">
+              <span>🌱</span>
+              <span>ฟีเจอร์ลดคาร์บอน</span>
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Carbon Tracking Button */}
+              <button
+                onClick={() => setShowCarbonModal(true)}
+                className="bg-green-500 hover:bg-green-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>🌍</span>
+                <span>Carbon Tracking</span>
+              </button>
+
+              {/* Recycling Guide Button */}
+              <button
+                onClick={() => setShowRecyclingGuide(true)}
+                className="bg-blue-500 hover:bg-blue-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>♻️</span>
+                <span>คู่มือรีไซเคิล</span>
+              </button>
+
+              {/* Points Dashboard Button */}
+              <button
+                onClick={() => setShowPointsDashboard(true)}
+                className="bg-purple-500 hover:bg-purple-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>🏆</span>
+                <span>แต้มสะสม ({ecoPoints.totalPoints})</span>
+              </button>
+            </div>
+
+            {/* Quick Photo Upload for Recycling */}
+            <div className="mt-4 pt-4 border-t border-green-300">
+              <button
+                onClick={() => setShowPhotoUpload(true)}
+                className="w-full bg-gradient-to-r from-orange-500 to-red-500 hover:from-orange-600 hover:to-red-600 text-white font-semibold py-3 px-4 rounded-lg transition-colors flex items-center justify-center space-x-2"
+              >
+                <span>📸</span>
+                <span>อัปโหลดรูปการรีไซเคิล (+50 แต้ม)</span>
+              </button>
+            </div>
+          </div>
+
           {showOTPModal && (
             <OTPDisplayModal
               packageId={otpPackageId}
@@ -1407,6 +1873,55 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
               package={packageToConfirmReceipt}
               onConfirmReceipt={handleFinalConfirmReceipt}
               onClose={() => setShowConfirmReceiptModal(false)}
+            />
+          )}
+
+          {/* New Modal Components */}
+          {showCarbonModal && (
+            <CarbonTrackingModal
+              isOpen={showCarbonModal}
+              packageId={userId}
+              onClose={() => setShowCarbonModal(false)}
+              ecoStats={{
+                totalCO2Saved: carbonProgress.orderDelivery + carbonProgress.pickup + carbonProgress.delivery + carbonProgress.recycling,
+                packagesDelivered: packages.filter(pkg => pkg.customer === userId && pkg.status === 'Delivered').length,
+                recyclingRate: completedSteps[3] ? 100 : 0,
+                ecoScore: 95
+              }}
+            />
+          )}
+
+          {showRecyclingGuide && (
+            <RecyclingGuideModal
+              isOpen={showRecyclingGuide}
+              onClose={() => setShowRecyclingGuide(false)}
+              onCompleteStep={(stepId: string) => {
+                const stepIndex = parseInt(stepId) - 1;
+                const newSteps = [...completedSteps];
+                newSteps[stepIndex] = true;
+                setCompletedSteps(newSteps);
+                
+                if (stepIndex === 3) { // Step 4 (recycling)
+                  setShowPhotoUpload(true);
+                }
+              }}
+            />
+          )}
+
+          {showPhotoUpload && (
+            <PhotoUploadModal
+              isOpen={showPhotoUpload}
+              onClose={() => setShowPhotoUpload(false)}
+              onPhotoSubmit={handlePhotoSubmit}
+              stepTitle="ขั้นตอนที่ 4: นำไปรีไซเคิล"
+            />
+          )}
+
+          {showPointsDashboard && (
+            <PointsDashboardModal
+              isOpen={showPointsDashboard}
+              onClose={() => setShowPointsDashboard(false)}
+              ecoPoints={ecoPoints}
             />
           )}
         </div>
