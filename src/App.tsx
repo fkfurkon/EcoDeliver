@@ -1586,15 +1586,15 @@ const AdminDashboard: React.FC<AdminDashboardProps> = ({ packages, lockers, onUp
 function App() {
   const [currentUserRole, setCurrentUserRole] = useState<string | null>(null); // 'customer', 'rider', 'admin', or null (for not logged in)
   const [userId, setUserId] = useState<string>(''); // To simulate a unique user ID
-  const [serviceFee, setServiceFee] = useState(2.50); // Default fee, passed down to CustomerDashboard
-  const [commissionRate, setCommissionRate] = useState(0.15); // Default 15% commission, passed down to RiderDashboard
+  const serviceFee = 2.50; // Default fee, passed down to CustomerDashboard
+  const commissionRate = 0.15; // Default 15% commission, passed down to RiderDashboard
 
   // Mock data for riders
-  const [riders, setRiders] = useState<Rider[]>([
+  const riders: Rider[] = [
     { id: 'Rider A', name: 'ไรเดอร์ A' },
     { id: 'Rider B', name: 'ไรเดอร์ B' },
     { id: 'Rider C', name: 'ไรเดอร์ C' },
-  ]);
+  ];
 
   // Mock data for packages and lockers
   const [packages, setPackages] = useState<Package[]>([
