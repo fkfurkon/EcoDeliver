@@ -150,7 +150,7 @@ const PaymentModal: React.FC<PaymentModalProps> = ({ packageId, serviceFee, onCo
           <div className="bg-gray-100 p-3 md:p-4 rounded-lg inline-block">
             {/* Simulated QR Code */}
             <img
-              src={`https://placehold.co/180x180/E0E7FF/4F46E5?text=QR+Code+for+%24${serviceFee.toFixed(2)}`}
+              src="./Image/Qr-PromtPay.jpeg"
               alt="QR Code"
               className="w-36 h-36 md:w-48 md:h-48 mx-auto rounded-lg shadow-md"
               onError={(e: React.SyntheticEvent<HTMLImageElement>) => {
@@ -653,8 +653,8 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
 
     setMessageType('success');
     setMessage(`🎉 ยืนยันการรับพัสดุ #${packageId} เรียบร้อยแล้ว! 
-✅ ล็อกเกอร์ ${lockerId} ได้ถูกปลดล็อกและพร้อมใช้งาน 
-🌱 ขอบคุณที่ใช้บริการ EcoDeliver`);
+ล็อกเกอร์ ${lockerId} ได้ถูกปลดล็อกและพร้อมใช้งาน 
+ขอบคุณที่ใช้บริการ EcoDeliver`);
 
     setShowConfirmReceiptModal(false);
     setPackageToConfirmReceipt(null);
@@ -772,7 +772,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-2 md:gap-4">
               {lockers.filter(locker => locker.status === 'Available').length === 0 ? (
                 <div className="col-span-full text-center eco-text-secondary p-4">
-                  <span className="text-2xl block mb-2">🌱</span>
                   <p className="text-sm md:text-base">ไม่มีล็อกเกอร์ว่างในขณะนี้</p>
                 </div>
               ) : (
@@ -781,7 +780,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                     key={locker.id}
                     className="realistic-locker available cursor-pointer h-24 sm:h-32 md:h-40 lg:h-48 transition-transform hover:scale-105 active:scale-95"
                     onClick={() => {
-                      console.log(`🌱 Eco Locker ${locker.id} selected - *soft beep*`);
+                      console.log(`Eco Locker ${locker.id} selected - *soft beep*`);
                       setSelectedLockerId(locker.id);
                       setShowBookLockerModal(true);
                     }}
@@ -832,7 +831,7 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
               {lockers.filter(locker => locker.status === 'Occupied').length === 0 ? (
-                <p className="col-span-full text-center eco-text-secondary">🌱 ไม่มีล็อกเกอร์ที่ถูกใช้งานในขณะนี้</p>
+                <p className="col-span-full text-center eco-text-secondary">ไม่มีล็อกเกอร์ที่ถูกใช้งานในขณะนี้</p>
               ) : (
                 lockers.filter(locker => locker.status === 'Occupied').map((locker) => (
                   <div
@@ -1009,9 +1008,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
             <div className="fixed inset-0 bg-green-900 bg-opacity-50 backdrop-blur-sm flex items-center justify-center p-2 md:p-4 z-50 overflow-y-auto">
               <div className="eco-card p-4 md:p-6 w-full max-w-sm md:max-w-md mx-2 my-4 max-h-screen overflow-y-auto">
                 <div className="text-center mb-4 md:mb-6">
-                  <div className="w-12 h-12 md:w-16 md:h-16 bg-gradient-to-br from-green-400 to-emerald-500 rounded-full flex items-center justify-center mx-auto mb-3 md:mb-4 float-animation">
-                    <span className="text-white font-bold text-xl md:text-2xl">🌱</span>
-                  </div>
                   <h3 className="text-lg md:text-xl lg:text-2xl font-bold eco-text-primary mb-2">จองล็อกเกอร์ Eco-Friendly</h3>
                   <p className="eco-text-secondary text-xs md:text-sm">การจัดส่งที่เป็นมิตรกับสิ่งแวดล้อม</p>
                 </div>
@@ -1144,7 +1140,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
                       type="submit"
                       className="eco-button font-semibold py-3 px-4 rounded-lg text-sm w-full md:w-auto flex items-center justify-center space-x-2 touch-manipulation active:scale-95 transition-transform duration-200"
                     >
-                      <span>🌱</span>
                       <span>จองล็อกเกอร์</span>
                     </button>
                   </div>
