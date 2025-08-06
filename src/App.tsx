@@ -72,13 +72,7 @@ interface PointTransaction {
   icon: string;
 }
 
-// Photo Upload Interface
-interface PhotoUpload {
-  id: string;
-  file: File | null;
-  preview: string;
-  uploaded: boolean;
-}
+
 
 interface MessageBoxProps {
   message: string;
@@ -1068,7 +1062,6 @@ const CustomerDashboard: React.FC<CustomerDashboardProps> = ({ packages, onUpdat
     delivery: 200,
     recycling: 150
   });
-  const [currentStep, setCurrentStep] = useState(1);
   const [completedSteps, setCompletedSteps] = useState<boolean[]>([false, false, false, false]);
   const [showRecyclingGuide, setShowRecyclingGuide] = useState(false);
   const [showPhotoUpload, setShowPhotoUpload] = useState(false);
